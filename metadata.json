@@ -1,0 +1,8 @@
+{
+  "name": "ARCHORA Luxury Furniture",
+  "description": "Premium luxury furniture ecommerce website with a modern minimalist design, product popups, cart, and admin dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,105 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Phase 3: Primitive Definition
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+    function isVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
+    function isAdmin() {
+      // Bootstrapped Admin: sumitaranisk@gmail.com
+      return (isSignedIn() && request.auth.token.email == 'sumitaranisk@gmail.com') ||
+             (isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
+
+    // Val Entities
+    function isValidProduct(data) {
+      return data.keys().hasAll(['name', 'description', 'price', 'category', 'images', 'inStock', 'stockCount', 'createdAt', 'updatedAt'])
+        && data.name is string && data.name.size() <= 200
+        && data.description is string && data.description.size() <= 5000
+        && data.price is number && data.price >= 0
+        && data.category is string && data.category.size() <= 100
+        && data.images is list && data.images.size() <= 20 && (data.images.size() == 0 || data.images[0] is string)
+        && data.get('modelUrl', '') is string
+        && data.get('dimensions', '') is string
+        && data.get('colors', []) is list
+        && data.get('sizes', []) is list
+        && data.inStock is bool
+        && data.stockCount is number && data.stockCount >= 0
+        && data.get('rating', 0) is number
+        && data.get('reviews', 0) is number
+        && data.createdAt is number
+        && data.updatedAt is number;
+    }
+
+    function isValidCategory(data) {
+      return data.keys().hasAll(['name', 'createdAt', 'updatedAt'])
+        && data.name is string && data.name.size() <= 100
+        && data.get('description', '') is string
+        && data.createdAt is number
+        && data.updatedAt is number;
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll(['userId', 'status', 'items', 'total', 'createdAt', 'updatedAt'])
+        && data.userId is string && data.userId == request.auth.uid
+        && data.status is string && data.status.size() <= 50
+        && data.items is list && data.items.size() <= 100
+        && data.total is number && data.total >= 0
+        && data.createdAt is number
+        && data.updatedAt is number;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['email', 'role', 'createdAt', 'updatedAt'])
+        && data.email is string && data.email.size() <= 200
+        && data.role is string && (data.role == 'customer' || data.role == 'admin')
+        && data.createdAt is number
+        && data.updatedAt is number;
+    }
+
+    // Products
+    match /products/{productId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidId(productId) && isValidProduct(incoming()) && incoming().createdAt == request.time.toMillis();
+      allow update: if isAdmin() && isValidProduct(incoming()) && incoming().updatedAt == request.time.toMillis();
+      allow delete: if isAdmin();
+    }
+
+    // Categories
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidId(categoryId) && isValidCategory(incoming()) && incoming().createdAt == request.time.toMillis();
+      allow update: if isAdmin() && isValidCategory(incoming()) && incoming().updatedAt == request.time.toMillis();
+      allow delete: if isAdmin();
+    }
+
+    // Orders
+    match /orders/{orderId} {
+      allow read: if (isSignedIn() && existing().userId == request.auth.uid) || isAdmin();
+      allow create: if isVerified() && isValidId(orderId) && isValidOrder(incoming()) && incoming().createdAt == request.time.toMillis();
+      allow update: if isAdmin() && isValidOrder(incoming()) && incoming().updatedAt == request.time.toMillis();
+    }
+
+    // Users
+    match /users/{userId} {
+      allow read: if (isSignedIn() && userId == request.auth.uid) || isAdmin();
+      allow create: if isSignedIn() && userId == request.auth.uid && isValidUser(incoming()) && incoming().email == request.auth.token.email && incoming().createdAt == request.time.toMillis() && incoming().role == 'customer';
+      allow update: if (isSignedIn() && userId == request.auth.uid && isValidUser(incoming()) && incoming().updatedAt == request.time.toMillis() && incoming().diff(existing()).affectedKeys().hasOnly(['updatedAt'])) || (isAdmin() && isValidUser(incoming()) && incoming().updatedAt == request.time.toMillis());
+    }
+
+    // Admins
+    match /admins/{userId} {
+      allow read: if isSignedIn();
+      allow write: if false; // Only manageable from backend or bootstrapped admin
+    }
+  }
+}
