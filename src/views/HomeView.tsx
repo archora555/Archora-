@@ -2,22 +2,12 @@ import React from 'react';
 import { Hero } from '../components/Hero';
 import { CategorySelector } from '../components/CategorySelector';
 import { ProductCard } from '../components/ProductCard';
-import { ProductModal } from '../components/ProductModal';
 import { useAppContext } from '../context/AppContext';
-import { Product } from '../types';
+import { useNavigate } from 'react-router-dom';
 
 export const HomeView = () => {
-  const { products } = useAppContext();
-  const [selectedProduct, setSelectedProduct] = React.useState<Product | null>(null);
-
-  const sections = [
-    { title: 'New Arrivals', filter: 'New Arrivals' },
-    { title: 'Best Seller', filter: 'Best Seller' },
-    { title: 'Office Use Pro', filter: 'Office Use Pro' },
-    { title: 'Living Room', filter: 'Living' },
-    { title: 'Bedroom', filter: 'Bedroom' },
-    { title: 'Dining', filter: 'Dining' }
-  ];
+  const { products, homeSections, logoConfig } = useAppContext();
+  const navigate = useNavigate();
 
   return (
     <div className="w-full">
@@ -26,7 +16,7 @@ export const HomeView = () => {
       <CategorySelector />
       
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12 flex flex-col gap-12 md:gap-16 overflow-hidden">
-        {sections.map((section) => {
+        {homeSections.map((section) => {
           // Fill with section products first, then pad with others to ensure the carousel has enough items
           const exactProducts = products.filter(p => p.category === section.filter);
           const otherProducts = products.filter(p => p.category !== section.filter);
@@ -46,11 +36,11 @@ export const HomeView = () => {
                 {sectionProducts.map((product, idx) => (
                   <div 
                     key={`${product.id}-${idx}`} 
-                    className="shrink-0 snap-start w-[calc((100%-36px)/3.5)] md:w-[calc((100%-64px)/4.5)] lg:w-[calc((100%-80px)/5.5)] xl:w-[calc((100%-80px)/6.5)]"
+                    className="shrink-0 snap-start w-[calc(100%/2.2)] sm:w-[calc(100%/3.2)] lg:w-[calc(100%/4.2)]"
                   >
                     <ProductCard 
                       product={product} 
-                      onClick={() => setSelectedProduct(product)} 
+                      onClick={() => navigate(`/product/${product.id}`)} 
                     />
                   </div>
                 ))}
@@ -64,7 +54,18 @@ export const HomeView = () => {
       <footer className="bg-archora-black text-white py-20 px-6">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="col-span-1 md:col-span-2">
-            <h3 className="font-display text-4xl mb-6">ARCHORA</h3>
+            {logoConfig.type === 'text' || !logoConfig.imageUrl ? (
+              <h3 className="font-display text-4xl mb-6">{logoConfig.text || 'ARCHORA'}</h3>
+            ) : (
+              <img 
+                src={logoConfig.imageUrl} 
+                alt={logoConfig.text || 'ARCHORA'} 
+                className="h-10 object-contain mb-6 invert"
+              />
+            )}
+            {logoConfig.type === 'image' && logoConfig.imageUrl && (
+              <h3 className="hidden font-display text-4xl mb-6">{logoConfig.text || 'ARCHORA'}</h3>
+            )}
             <p className="text-gray-400 max-w-md">Redefining modern luxury. Our pieces are crafted with precision, blending timeless elegance with contemporary design.</p>
           </div>
           <div>
@@ -86,13 +87,6 @@ export const HomeView = () => {
           </div>
         </div>
       </footer>
-
-      {selectedProduct && (
-        <ProductModal 
-          product={selectedProduct} 
-          onClose={() => setSelectedProduct(null)} 
-        />
-      )}
     </div>
   );
 };

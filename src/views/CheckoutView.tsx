@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { motion } from 'motion/react';
 import { CheckCircle2 } from 'lucide-react';
+import { Coupon } from '../types';
 
 export const CheckoutView = () => {
-  const { cart, clearCart, addOrder, setCurrentView } = useAppContext();
+  const { cart, clearCart, addOrder, setCurrentView, appliedCoupon, setAppliedCoupon } = useAppContext();
   const [isSuccess, setIsSuccess] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -19,9 +20,48 @@ export const CheckoutView = () => {
     cvc: ''
   });
 
+  const [couponCode, setCouponCode] = useState(appliedCoupon ? appliedCoupon.code : '');
+  const [couponError, setCouponError] = useState('');
+
+  const handleApplyCoupon = async () => {
+    setCouponError('');
+    if (!couponCode) return;
+    try {
+      const { doc, getDoc } = await import('firebase/firestore');
+      const { db } = await import('../firebase');
+      const d = await getDoc(doc(db, 'coupons', couponCode.toUpperCase()));
+      if (d.exists()) {
+        const c = d.data() as Coupon;
+        if (!c.isActive) {
+          setCouponError('This coupon is no longer active.');
+          return;
+        }
+        if (c.expiryDate && new Date(c.expiryDate) < new Date()) {
+          setCouponError('This coupon has expired.');
+          return;
+        }
+        setAppliedCoupon(c);
+      } else {
+        setCouponError('Invalid coupon code.');
+      }
+    } catch(e) {
+      setCouponError('Error applying coupon.');
+    }
+  };
+
   const subtotal = cart.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
   const shipping = subtotal > 5000 ? 0 : 250;
-  const total = subtotal + shipping;
+  
+  let discountAmount = 0;
+  if (appliedCoupon) {
+    if (appliedCoupon.type === 'percentage') {
+      discountAmount = subtotal * (appliedCoupon.value / 100);
+    } else {
+      discountAmount = appliedCoupon.value;
+    }
+  }
+  
+  const total = Math.max(0, subtotal - discountAmount) + shipping;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,7 +173,7 @@ export const CheckoutView = () => {
               {cart.map((item, i) => (
                 <div key={i} className="flex gap-4">
                   <div className="w-20 h-24 bg-white shrink-0">
-                    <img src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-cover" />
+                    <img src={item.product.images[0] || undefined} alt={item.product.name} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 text-sm">
                     <p className="font-semibold text-archora-black mb-1">{item.product.name}</p>
@@ -145,11 +185,37 @@ export const CheckoutView = () => {
               ))}
             </div>
             
-            <div className="flex flex-col gap-4 text-sm">
+            <div className="flex flex-col gap-4 text-sm mt-8 border-t border-gray-200 pt-8">
+              
+              <div className="mb-4">
+                <p className="font-medium mb-2">Discount Code</p>
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    value={couponCode} 
+                    onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                    placeholder="Enter code" 
+                    className="border border-gray-300 p-3 flex-1 text-xs uppercase" 
+                    disabled={!!appliedCoupon}
+                  />
+                  <button type="button" onClick={appliedCoupon ? () => {setAppliedCoupon(null); setCouponCode('')} : handleApplyCoupon} className="bg-archora-black text-white px-4 text-xs tracking-widest uppercase hover:bg-archora-gold transition-colors font-semibold disabled:opacity-50">
+                    {appliedCoupon ? 'Remove' : 'Apply'}
+                  </button>
+                </div>
+                {couponError && <p className="text-red-500 text-xs mt-1">{couponError}</p>}
+                {appliedCoupon && <p className="text-green-600 text-xs mt-1">Code applied successfully!</p>}
+              </div>
+
               <div className="flex justify-between">
                 <span className="text-gray-600">Subtotal</span>
                 <span>${subtotal.toLocaleString()}</span>
               </div>
+              {appliedCoupon && (
+                <div className="flex justify-between text-green-600">
+                  <span>Discount ({appliedCoupon.code})</span>
+                  <span>-${discountAmount.toLocaleString()}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-gray-600">Shipping</span>
                 <span>{shipping === 0 ? 'Free' : `$${shipping.toLocaleString()}`}</span>

@@ -4,6 +4,8 @@ export interface Product {
   description: string;
   price: number;
   category: string;
+  subCategory?: string;
+  materials?: string;
   images: string[];
   modelUrl?: string;
   dimensions?: string;
@@ -34,4 +36,73 @@ export interface Order {
   };
 }
 
-export type ViewState = 'home' | 'shop' | 'cart' | 'wishlist' | 'checkout' | 'admin';
+export interface QuoteRequest {
+  id: string;
+  productId: string;
+  productName: string;
+  customerName: string;
+  customerEmail: string;
+  size: string;
+  color: string;
+  material: string;
+  notes: string;
+  date: string;
+  status: 'Pending' | 'Reviewed' | 'Responded';
+}
+
+export interface Review {
+  id: string;
+  productId: string;
+  customerName: string;
+  rating: number;
+  comment: string;
+  date: string;
+}
+
+export interface Coupon {
+  id: string;
+  code: string;
+  type: 'percentage' | 'fixed';
+  value: number;
+  expiryDate: string;
+  isActive: boolean;
+}
+
+export interface LayoutConfig {
+  header: {
+    bgColor: string;
+  };
+  announcementBar: {
+    text: string;
+    fontSize: number;
+    height: number;
+    padding: number;
+    show: boolean;
+    bgColor: string;
+    textColor: string;
+  };
+  logoSettings: {
+    type: 'text' | 'image';
+    text: string;
+    imageUrl: string;
+    width: number;
+    mobileHeight: number;
+    desktopHeight: number;
+  };
+  categorySection: {
+    title: string;
+    fontSize: number;
+    letterSpacing: number;
+    marginTop: number;
+    marginBottom: number;
+  };
+  categoryCards: {
+    width: number;
+    height: number;
+    aspectRatio: string;
+    cornerRadius: number;
+    gap: number;
+  };
+}
+
+export type ViewState = 'home' | 'shop' | 'cart' | 'wishlist' | 'checkout' | 'admin' | 'account' | 'tracking' | 'profile';

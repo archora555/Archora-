@@ -8,7 +8,7 @@ const swipePower = (offset: number, velocity: number) => {
 };
 
 export const Hero = () => {
-  const { setCurrentView, introFinished, heroBanners: banners } = useAppContext();
+  const { setCurrentView, introFinished, heroBanners: banners, layoutConfig } = useAppContext();
   const [[page, direction], setPage] = useState([0, 0]);
 
   // We only have 5 images, but we'll wrap around.
@@ -112,7 +112,7 @@ export const Hero = () => {
           className="relative w-full flex items-center justify-center"
         >
           {/* Ghost element for sizing */}
-          <div className="w-[90%] md:w-[75%] lg:w-[65%] aspect-video invisible pointer-events-none"></div>
+          <div className="w-[100%] md:w-[75%] lg:w-[65%] aspect-video invisible pointer-events-none"></div>
 
           {banners.map((banner, idx) => {
             const offset = getOffset(idx, page);
@@ -136,38 +136,52 @@ export const Hero = () => {
                   if (swipe < -swipeConfidenceThreshold) paginate(1);
                   else if (swipe > swipeConfidenceThreshold) paginate(-1);
                 }}
-                className="absolute w-[90%] md:w-[75%] lg:w-[65%] aspect-video rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing border border-white/20"
+                className="absolute w-[100%] md:w-[75%] lg:w-[65%] aspect-video rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing border border-white/20"
                 style={{
                   transformStyle: 'preserve-3d',
                 }}
               >
-                <img 
-                  src={banner.image} 
-                  alt={banner.title} 
-                  className="w-full h-full object-cover pointer-events-none"
-                  draggable="false"
-                />
+                <div className="w-full h-full bg-archora-gray/20">
+                  {banner.image && (
+                    <img 
+                      src={banner.image} 
+                      alt={banner.title} 
+                      className="w-full h-full object-cover pointer-events-none"
+                      draggable="false"
+                    />
+                  )}
+                </div>
                 {/* Cinematic overlay for depth */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none z-10" />
                 
                 {/* Text for center slide */}
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: offset === 0 ? 1 : 0, y: offset === 0 ? 0 : 10 }}
                   transition={{ duration: 0.6, delay: offset === 0 ? 0.3 : 0 }}
-                  className="absolute bottom-8 md:bottom-12 left-8 md:left-12 flex flex-col"
+                  className="absolute bottom-6 md:bottom-12 left-6 md:left-12 flex flex-col items-start z-30 pointer-events-none"
                 >
-                   <h2 className="text-white font-display text-2xl md:text-5xl tracking-wide mb-2 pointer-events-none drop-shadow-md">
+                   <h2 className="text-white font-display text-3xl md:text-5xl tracking-wide mb-1 md:mb-2 drop-shadow-md">
                      {banner.title}
                    </h2>
-                   <div className="h-0.5 w-12 bg-archora-gold mt-2 mb-4"></div>
+                   <div className="h-0.5 w-12 bg-[#FFD700] mt-2 mb-4 md:mb-6 shadow-[0_0_8px_rgba(255,215,0,0.6)]"></div>
+                   
+                   <button 
+                     onClick={(e) => {
+                       e.stopPropagation();
+                       setCurrentView('catalog');
+                     }}
+                     className="bg-[#FFD700] border-2 border-[#FFD700] text-black px-6 py-2.5 md:px-8 md:py-3 text-xs md:text-sm font-bold uppercase tracking-widest hover:bg-white hover:border-white transition-colors pointer-events-auto shadow-lg"
+                   >
+                     Shop Special Offer
+                   </button>
                 </motion.div>
               </motion.div>
             );
           })}
           
           {/* Slider Pagination Controls */}
-          <div className="absolute -bottom-8 md:-bottom-12 left-1/2 -translate-x-1/2 flex gap-3 z-30 pointer-events-auto">
+          <div className="absolute -bottom-10 md:-bottom-12 left-1/2 -translate-x-1/2 flex gap-3 z-30 pointer-events-auto">
             {banners.map((_, idx) => (
               <button 
                 key={idx}
@@ -198,26 +212,15 @@ export const Hero = () => {
            className="flex flex-col items-center"
         >
           {introFinished && (
-            <motion.button 
-              layoutId="explore-world-btn"
-              onClick={() => setCurrentView('shop')}
-              className="group relative inline-flex items-center justify-center px-10 py-4 md:py-4 font-sans tracking-widest text-xs md:text-sm uppercase transition-all duration-300 font-bold btn-gold rounded-sm overflow-hidden mb-6"
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.1 }}
+              className="text-gray-500 text-sm md:text-base uppercase tracking-[0.2em] font-medium mt-2"
             >
-              <span className="relative z-10 flex items-center text-archora-black">
-                <span>EXPLORE WORLD</span>
-                <span className="ml-3 group-hover:translate-x-1 transition-transform duration-300">→</span>
-              </span>
-            </motion.button>
+              Select a category
+            </motion.p>
           )}
-
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-            className="text-gray-500 text-sm md:text-base uppercase tracking-[0.2em] font-medium mt-2"
-          >
-            Select a category
-          </motion.p>
         </motion.div>
       </div>
     </section>

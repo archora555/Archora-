@@ -1,14 +1,54 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { motion } from 'motion/react';
 import { Trash2, ArrowRight } from 'lucide-react';
+import { Coupon } from '../types';
 
 export const CartView = () => {
-  const { cart, updateCartQuantity, removeFromCart, setCurrentView } = useAppContext();
+  const { cart, updateCartQuantity, removeFromCart, setCurrentView, appliedCoupon, setAppliedCoupon } = useAppContext();
+  
+  const [couponCode, setCouponCode] = useState(appliedCoupon ? appliedCoupon.code : '');
+  const [couponError, setCouponError] = useState('');
+
+  const handleApplyCoupon = async () => {
+    setCouponError('');
+    if (!couponCode) return;
+    try {
+      const { doc, getDoc } = await import('firebase/firestore');
+      const { db } = await import('../firebase');
+      const d = await getDoc(doc(db, 'coupons', couponCode.toUpperCase()));
+      if (d.exists()) {
+        const c = d.data() as Coupon;
+        if (!c.isActive) {
+          setCouponError('This coupon is no longer active.');
+          return;
+        }
+        if (c.expiryDate && new Date(c.expiryDate) < new Date()) {
+          setCouponError('This coupon has expired.');
+          return;
+        }
+        setAppliedCoupon(c);
+      } else {
+        setCouponError('Invalid coupon code.');
+      }
+    } catch(e) {
+      setCouponError('Error applying coupon.');
+    }
+  };
 
   const subtotal = cart.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
   const shipping = subtotal > 5000 ? 0 : 250;
-  const total = subtotal + (cart.length > 0 ? shipping : 0);
+  
+  let discountAmount = 0;
+  if (appliedCoupon) {
+    if (appliedCoupon.type === 'percentage') {
+      discountAmount = subtotal * (appliedCoupon.value / 100);
+    } else {
+      discountAmount = appliedCoupon.value;
+    }
+  }
+
+  const total = subtotal - discountAmount + (cart.length > 0 ? shipping : 0);
 
   if (cart.length === 0) {
     return (
@@ -40,7 +80,7 @@ export const CartView = () => {
               className="flex gap-6 pb-8 border-b border-gray-100"
             >
               <div className="w-32 h-40 bg-archora-gray shrink-0">
-                <img src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-cover" />
+                <img src={item.product.images[0] || undefined} alt={item.product.name} className="w-full h-full object-cover" />
               </div>
               <div className="flex-1 flex flex-col justify-between">
                 <div>
@@ -88,7 +128,33 @@ export const CartView = () => {
                 <span className="text-gray-600">White Glove Delivery</span>
                 <span>{shipping === 0 ? 'Complimentary' : `$${shipping.toLocaleString()}`}</span>
               </div>
+              {appliedCoupon && (
+                <div className="flex justify-between text-archora-gold">
+                  <span>Discount ({appliedCoupon.code})</span>
+                  <span>-${discountAmount.toLocaleString()}</span>
+                </div>
+              )}
             </div>
+
+            <div className="mb-6 border-b border-gray-200 pb-6">
+              <label className="block text-sm uppercase tracking-widest text-gray-500 mb-2">Gift card or discount code</label>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  className="flex-1 border p-3 text-sm uppercase font-mono" 
+                  placeholder="CODE"
+                  value={couponCode} 
+                  onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                  disabled={!!appliedCoupon}
+                />
+                <button type="button" onClick={appliedCoupon ? () => {setAppliedCoupon(null); setCouponCode('')} : handleApplyCoupon} className="bg-archora-black px-4 text-white text-xs tracking-widest uppercase hover:bg-archora-gold transition-colors font-semibold disabled:opacity-50">
+                  {appliedCoupon ? 'Remove' : 'Apply'}
+                </button>
+              </div>
+              {couponError && <p className="text-red-500 text-xs mt-2">{couponError}</p>}
+              {appliedCoupon && <p className="text-green-600 text-xs mt-2">Code applied successfully!</p>}
+            </div>
+
             <div className="flex justify-between text-lg font-medium mb-8">
               <span>Total</span>
               <span>${total.toLocaleString()}</span>

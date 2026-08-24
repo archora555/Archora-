@@ -15,8 +15,9 @@ service cloud.firestore {
     function isSignedIn() { return request.auth != null; }
     function isVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
     function isAdmin() {
-      // Bootstrapped Admin: sumitaranisk@gmail.com
+      // Bootstrapped Admin: sumitaranisk@gmail.com and archora555
       return (isSignedIn() && request.auth.token.email == 'sumitaranisk@gmail.com') ||
+             (isSignedIn() && request.auth.token.email == 'archora555@archora.com') ||
              (isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
     }
 
@@ -92,14 +93,37 @@ service cloud.firestore {
     // Users
     match /users/{userId} {
       allow read: if (isSignedIn() && userId == request.auth.uid) || isAdmin();
-      allow create: if isSignedIn() && userId == request.auth.uid && isValidUser(incoming()) && incoming().email == request.auth.token.email && incoming().createdAt == request.time.toMillis() && incoming().role == 'customer';
-      allow update: if (isSignedIn() && userId == request.auth.uid && isValidUser(incoming()) && incoming().updatedAt == request.time.toMillis() && incoming().diff(existing()).affectedKeys().hasOnly(['updatedAt'])) || (isAdmin() && isValidUser(incoming()) && incoming().updatedAt == request.time.toMillis());
+      allow create: if isSignedIn() && userId == request.auth.uid && isValidUser(incoming()) && incoming().email == request.auth.token.email && incoming().role == 'customer';
+      allow update: if (isSignedIn() && userId == request.auth.uid && isValidUser(incoming()) && incoming().diff(existing()).affectedKeys().hasOnly(['updatedAt'])) || (isAdmin() && isValidUser(incoming()));
     }
 
     // Admins
     match /admins/{userId} {
       allow read: if isSignedIn();
       allow write: if false; // Only manageable from backend or bootstrapped admin
+    }
+
+    // Quotes
+    match /quotes/{quoteId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Reviews
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Coupons
+    match /coupons/{couponId} {
+      allow read: if true;
+      allow write: if true; // Admin creates, user reads
+    }
+
+    // Settings (Site Config)
+    match /settings/{docId} {
+      allow read, write: if true;
     }
   }
 }

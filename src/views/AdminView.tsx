@@ -1,14 +1,70 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { Package, ShoppingBag, TrendingUp, Users, Copy, Search, Plus, Trash2, Edit2, X, CheckCircle, Image, ImagePlus } from 'lucide-react';
-import { Order, Product } from '../types';
+import { Order, Product, QuoteRequest, Coupon } from '../types';
+import { useNavigate, useLocation } from 'react-router-dom';
+
+const compressImage = (file: File, maxSize: number = 1000): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxSize) {
+            height *= maxSize / width;
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width *= maxSize / height;
+            height = maxSize;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.8));
+        } else {
+          resolve(event.target?.result as string);
+        }
+      };
+      img.onerror = reject;
+      img.src = event.target?.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
 
 export const AdminView = () => {
-  const { orders, products, setProducts, isAdminLoggedIn, setIsAdminLoggedIn, setOrders } = useAppContext();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'orders' | 'products' | 'customers' | 'content'>('dashboard');
+  const { orders, products, setProducts, setOrders, heroBanners, setHeroBanners, subCategories, setSubCategories, homeSections, setHomeSections, logoConfig, setLogoConfig, menuItems, setMenuItems, isAdminLoggedIn, setIsAdminLoggedIn, saveSettingsToFirebase, layoutConfig, setLayoutConfig } = useAppContext();
+  
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [isSavingConfig, setIsSavingConfig] = useState(false);
+  const [publishSuccess, setPublishSuccess] = useState(false);
+  
+  const pathParts = location.pathname.split('/');
+  const currentTab = pathParts.length > 2 && pathParts[2] ? pathParts[2] : 'dashboard';
+  const validTabs = ['dashboard', 'orders', 'products', 'customers', 'banners', 'categories', 'product-rows', 'inquiries', 'coupons', 'settings', 'layout'];
+  const activeTab = validTabs.includes(currentTab) ? currentTab : 'dashboard';
 
-  const [loginForm, setLoginForm] = useState({ username: '', password: '' });
-  const [loginError, setLoginError] = useState('');
+  useEffect(() => {
+    if (!isAdminLoggedIn) {
+      navigate('/archora-admin-portal');
+    } else {
+      setIsAuthChecking(false);
+    }
+  }, [isAdminLoggedIn, navigate]);
 
   // Modals for CRUD
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -19,6 +75,8 @@ export const AdminView = () => {
   const [pDesc, setPDesc] = useState('');
   const [pPrice, setPPrice] = useState(0);
   const [pCategory, setPCategory] = useState('Best Seller');
+  const [pSubCategory, setPSubCategory] = useState('');
+  const [pMaterials, setPMaterials] = useState('');
   const [pImages, setPImages] = useState<string[]>(['']);
   const [pModelUrl, setPModelUrl] = useState('');
   const [pDimensions, setPDimensions] = useState('');
@@ -29,25 +87,41 @@ export const AdminView = () => {
 
   const totalRevenue = orders.reduce((acc, order) => acc + order.total, 0);
 
-  // Customers data extracted from orders
-  const customers = Array.from(new Set(orders.map(o => o.customerInfo.email))).map(email => {
-    const custOrders = orders.filter(o => o.customerInfo.email === email);
-    return {
-      name: custOrders[0]?.customerInfo.name || 'Unknown',
-      email,
-      totalSpent: custOrders.reduce((a, o) => a + o.total, 0),
-      orderCount: custOrders.length
-    };
-  });
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (loginForm.username === 'admin' && loginForm.password === 'admin123') {
-      setIsAdminLoggedIn(true);
-      setLoginError('');
-    } else {
-      setLoginError('Invalid credentials');
+  // Customers data extracted from mock_users combined with orders
+  const customers = (() => {
+    try {
+      const storedStr = localStorage.getItem('mock_users') || '[]';
+      const storedUsers = JSON.parse(storedStr);
+      return storedUsers.map((u: any) => {
+        const custOrders = orders.filter(o => o.customerInfo.email === u.email);
+        return {
+          id: u.id || u.email,
+          name: u.fullName || u.username,
+          email: u.email,
+          phone: u.phone || 'N/A',
+          totalSpent: custOrders.reduce((a, o) => a + o.total, 0),
+          orderCount: custOrders.length,
+          status: u.status || 'Active',
+          createdAt: u.createdAt || Date.now()
+        };
+      }).sort((a: any, b: any) => b.createdAt - a.createdAt);
+    } catch {
+      return [];
     }
+  })();
+
+  const handleLogout = () => {
+    setIsAdminLoggedIn(false);
+    navigate('/');
+  };
+
+  const handleSaveConfig = async () => {
+    setIsSavingConfig(true);
+    setPublishSuccess(false);
+    await saveSettingsToFirebase();
+    setIsSavingConfig(false);
+    setPublishSuccess(true);
+    setTimeout(() => setPublishSuccess(false), 3000);
   };
 
   const openAddProduct = () => {
@@ -56,6 +130,8 @@ export const AdminView = () => {
     setPDesc('');
     setPPrice(0);
     setPCategory('New Arrivals');
+    setPSubCategory('');
+    setPMaterials('');
     setPImages(['', '']);
     setPModelUrl('');
     setPDimensions('');
@@ -72,6 +148,8 @@ export const AdminView = () => {
     setPDesc(prod.description);
     setPPrice(prod.price);
     setPCategory(prod.category);
+    setPSubCategory(prod.subCategory || '');
+    setPMaterials(prod.materials || '');
     setPImages([...prod.images]);
     setPModelUrl(prod.modelUrl || '');
     setPDimensions(prod.dimensions || '');
@@ -96,6 +174,8 @@ export const AdminView = () => {
       description: pDesc,
       price: Number(pPrice),
       category: pCategory,
+      subCategory: pSubCategory,
+      materials: pMaterials,
       images: pImages.filter(img => img.trim() !== ''),
       modelUrl: pModelUrl,
       dimensions: pDimensions,
@@ -115,46 +195,10 @@ export const AdminView = () => {
     setIsProductModalOpen(false);
   };
 
-  if (!isAdminLoggedIn) {
+  if (isAuthChecking) {
     return (
       <div className="w-full min-h-screen flex items-center justify-center bg-gray-50 px-4 pt-20">
-        <div className="bg-white p-8 md:p-12 border border-gray-200 max-w-md w-full shadow-2xl">
-          <div className="text-center mb-8">
-            <h1 className="font-display text-3xl font-bold tracking-tight mb-2">ARCHORA</h1>
-            <p className="text-gray-500 uppercase tracking-widest text-xs">Admin Access Portal</p>
-          </div>
-          {loginError && <p className="text-red-600 text-sm mb-4 text-center">{loginError}</p>}
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div>
-              <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">Username</label>
-              <input 
-                type="text" 
-                value={loginForm.username}
-                onChange={e => setLoginForm({...loginForm, username: e.target.value})}
-                className="w-full border border-gray-200 px-4 py-3 text-sm focus:border-archora-black outline-none transition-colors"
-                placeholder="admin"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">Password</label>
-              <input 
-                type="password" 
-                value={loginForm.password}
-                onChange={e => setLoginForm({...loginForm, password: e.target.value})}
-                className="w-full border border-gray-200 px-4 py-3 text-sm focus:border-archora-black outline-none transition-colors"
-                placeholder="admin123"
-                required
-              />
-            </div>
-            <button type="submit" className="w-full bg-archora-black text-white hover:bg-archora-gold transition-colors py-4 text-xs uppercase tracking-widest font-semibold flex justify-center items-center gap-2">
-              Authenticate
-            </button>
-          </form>
-          <div className="mt-6 text-center">
-            <p className="text-xs text-gray-400">Hint: admin / admin123</p>
-          </div>
-        </div>
+        <p className="text-gray-500 uppercase tracking-widest text-xs font-semibold">Verifying secure connection...</p>
       </div>
     );
   }
@@ -179,18 +223,18 @@ export const AdminView = () => {
           <p className="text-gray-500 tracking-wide">Manage your luxury boutique operations directly connected to the live catalog.</p>
         </div>
         <button 
-          onClick={() => setIsAdminLoggedIn(false)}
+          onClick={handleLogout}
           className="text-xs font-semibold uppercase tracking-widest hover:text-archora-gold transition-colors self-start md:self-auto"
         >
           Secure Logout
         </button>
       </div>
 
-      <div className="flex overflow-x-auto gap-4 border-b border-gray-200 mb-8 pb-1 scrollbar-hide">
-        {['dashboard', 'products', 'orders', 'customers', 'content'].map(tab => (
+      <div className="flex flex-wrap gap-4 border-b border-gray-200 mb-8 pb-1">
+        {['dashboard', 'layout', 'products', 'orders', 'customers', 'banners', 'categories', 'product-rows', 'inquiries', 'coupons', 'settings'].map(tab => (
           <button 
             key={tab}
-            onClick={() => setActiveTab(tab as any)}
+            onClick={() => navigate(`/admin/${tab === 'dashboard' ? '' : tab}`)}
             className={`pb-3 px-4 uppercase tracking-widest text-xs font-semibold transition-colors border-b-2 whitespace-nowrap ${activeTab === tab ? 'border-archora-gold text-archora-black bg-archora-gold/5' : 'border-transparent text-gray-400 hover:text-archora-black'}`}
           >
             {tab.replace('-', ' ')}
@@ -361,13 +405,16 @@ export const AdminView = () => {
 
       {activeTab === 'customers' && (
         <div className="bg-white border border-gray-100 shadow-sm overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[800px]">
+          <table className="w-full text-left border-collapse min-w-[1000px]">
             <thead>
               <tr className="bg-archora-gray/50 border-b border-gray-200 text-xs uppercase tracking-widest text-gray-500">
                 <th className="p-4 font-medium pl-6">Name</th>
-                <th className="p-4 font-medium">Email</th>
+                <th className="p-4 font-medium">Contact</th>
+                <th className="p-4 font-medium">Date Registered</th>
+                <th className="p-4 font-medium">Status</th>
                 <th className="p-4 font-medium">Total Spent</th>
                 <th className="p-4 font-medium">Orders</th>
+                <th className="p-4 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -375,27 +422,347 @@ export const AdminView = () => {
                  customers.map((c, i) => (
                     <tr key={i} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
                       <td className="p-4 pl-6 font-medium text-sm">{c.name}</td>
-                      <td className="p-4 text-gray-500 text-sm">{c.email}</td>
+                      <td className="p-4 text-sm">
+                        <div className="text-gray-900">{c.email}</div>
+                        <div className="text-gray-500 text-xs mt-1">{c.phone}</div>
+                      </td>
+                      <td className="p-4 text-gray-500 text-sm">
+                        {new Date(c.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="p-4 text-sm">
+                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${c.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                          {c.status}
+                        </span>
+                      </td>
                       <td className="p-4 font-medium">${c.totalSpent.toLocaleString()}</td>
                       <td className="p-4 text-sm">{c.orderCount}</td>
+                      <td className="p-4">
+                        <button 
+                          onClick={() => {
+                            navigator.clipboard.writeText(c.email);
+                            alert(`Copied ${c.email} to clipboard!`);
+                          }}
+                          className="flex items-center gap-2 text-xs font-semibold text-archora-gold hover:text-archora-black transition-colors"
+                          title="Copy Email"
+                        >
+                          <Copy className="w-4 h-4" /> Copy Email
+                        </button>
+                      </td>
                     </tr>
                  ))
               ) : (
-                <tr><td colSpan={4} className="p-8 text-center text-gray-500">No customers found.</td></tr>
+                <tr><td colSpan={7} className="p-8 text-center text-gray-500">No customers found.</td></tr>
               )}
             </tbody>
           </table>
         </div>
       )}
 
-      {activeTab === 'content' && (
-        <div className="bg-white border border-gray-100 p-8 shadow-sm">
-           <h2 className="font-display text-2xl mb-6 flex items-center gap-3"><Image className="text-archora-gold"/> Homepage Media Manager</h2>
-           <div className="border border-dashed border-gray-300 p-12 text-center rounded bg-gray-50">
-              <ImagePlus className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 mb-2">Drag and drop new hero banners here</p>
-              <button className="text-xs uppercase tracking-widest font-semibold text-archora-gold hover:text-archora-black transition-colors">Select Files</button>
-           </div>
+      {activeTab === 'banners' && (
+        <div className="space-y-8">
+          <div className="flex justify-end p-4 bg-white border border-gray-100 shadow-sm sticky top-[100px] z-20">
+            <button 
+              onClick={handleSaveConfig}
+              disabled={isSavingConfig}
+              className="bg-archora-black text-white px-6 py-2 text-xs font-bold uppercase tracking-widest hover:bg-archora-gold transition-colors flex items-center gap-2 rounded-sm disabled:opacity-50"
+            >
+              <CheckCircle className="w-4 h-4" /> {isSavingConfig ? 'Saving...' : publishSuccess ? 'Saved!' : 'Publish Content Changes'}
+            </button>
+          </div>
+
+          <div className="bg-white border border-gray-100 p-8 shadow-sm">
+            <h2 className="font-display text-2xl mb-6 flex items-center gap-3"><Image className="text-archora-gold w-6 h-6"/> Homepage Hero Banners</h2>
+            <div className="space-y-4">
+              {heroBanners.map((banner, i) => (
+                <div key={i} className="flex gap-4 items-center bg-gray-50 p-4 border border-gray-200">
+                  <img src={banner.image || undefined} className="w-24 h-16 object-cover border border-gray-300" alt="Banner" />
+                  <div className="flex-1 space-y-2">
+                     <input 
+                       type="text" 
+                       value={banner.title} 
+                       onChange={e => {
+                         const nb = [...heroBanners];
+                         nb[i] = { ...nb[i], title: e.target.value };
+                         setHeroBanners(nb);
+                       }}
+                       placeholder="Banner Title" 
+                       className="w-full text-sm border p-2" 
+                     />
+                     <input 
+                       type="file" 
+                       accept="image/*"
+                       onChange={async e => {
+                         const file = e.target.files?.[0];
+                         if (file) {
+                           const compressed = await compressImage(file);
+                           const nb = [...heroBanners];
+                           nb[i] = { ...nb[i], image: compressed };
+                           setHeroBanners(nb);
+                         }
+                       }}
+                       className="w-full text-xs border p-2 bg-white" 
+                     />
+                  </div>
+                  <button onClick={() => setHeroBanners(heroBanners.filter((_, idx) => idx !== i))} className="text-red-500 hover:bg-red-50 p-2 rounded">
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+              ))}
+              <button 
+                onClick={() => setHeroBanners([...heroBanners, { id: Date.now(), image: '', title: 'New Banner' }])}
+                className="text-xs uppercase tracking-widest font-semibold p-4 border border-dashed border-gray-300 w-full hover:bg-gray-50 text-gray-600">
+                + Add Hero Banner
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'categories' && (
+        <div className="space-y-8">
+          <div className="flex justify-end p-4 bg-white border border-gray-100 shadow-sm sticky top-[100px] z-20">
+            <button 
+              onClick={handleSaveConfig}
+              disabled={isSavingConfig}
+              className="bg-archora-black text-white px-6 py-2 text-xs font-bold uppercase tracking-widest hover:bg-archora-gold transition-colors flex items-center gap-2 rounded-sm disabled:opacity-50"
+            >
+              <CheckCircle className="w-4 h-4" /> {isSavingConfig ? 'Saving...' : publishSuccess ? 'Saved!' : 'Publish Content Changes'}
+            </button>
+          </div>
+
+          <div className="bg-white border border-gray-100 p-8 shadow-sm">
+            <h2 className="font-display text-2xl mb-6 flex items-center gap-3"><Plus className="text-archora-gold w-6 h-6"/> Homepage Sub-Categories</h2>
+            <p className="text-xs text-gray-500 mb-4">Icon names must match Lucide-React icon names (e.g., 'Sofa', 'BedDouble', 'Lamp')</p>
+            <div className="space-y-4">
+              {subCategories.map((cat, i) => (
+                <div key={i} className="flex gap-4 items-center bg-gray-50 p-4 border border-gray-200">
+                  <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
+                     <input 
+                       type="text" 
+                       value={cat.name} 
+                       onChange={e => {
+                         const n = [...subCategories];
+                         n[i] = { ...n[i], name: e.target.value };
+                         setSubCategories(n);
+                       }}
+                       placeholder="Category Name" 
+                       className="w-full text-sm border p-2" 
+                     />
+                     <input 
+                       type="text" 
+                       value={cat.iconName} 
+                       onChange={e => {
+                         const n = [...subCategories];
+                         n[i] = { ...n[i], iconName: e.target.value };
+                         setSubCategories(n);
+                       }}
+                       placeholder="Icon Name (e.g. Sofa)" 
+                       className="w-full text-sm border p-2" 
+                     />
+                     <div className="flex flex-col gap-2">
+                       {cat.image && <img src={cat.image} className="h-10 w-10 object-cover border border-gray-300" alt="Preview" />}
+                       <input 
+                         type="file" 
+                         accept="image/*"
+                         onChange={async e => {
+                           const file = e.target.files?.[0];
+                           if (file) {
+                             const compressed = await compressImage(file);
+                             const n = [...subCategories];
+                             n[i] = { ...n[i], image: compressed };
+                             setSubCategories(n);
+                           }
+                         }}
+                         className="w-full text-xs border p-2 bg-white" 
+                       />
+                     </div>
+                  </div>
+                  <button onClick={() => setSubCategories(subCategories.filter((_, idx) => idx !== i))} className="text-red-500 hover:bg-red-50 p-2 rounded">
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+              ))}
+              <button 
+                onClick={() => setSubCategories([...subCategories, { id: `cat_${Date.now()}`, name: 'New Cat', iconName: 'HelpCircle' }])}
+                className="text-xs uppercase tracking-widest font-semibold p-4 border border-dashed border-gray-300 w-full hover:bg-gray-50 text-gray-600">
+                + Add Sub-Category
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'product-rows' && (
+        <div className="space-y-8">
+          <div className="flex justify-end p-4 bg-white border border-gray-100 shadow-sm sticky top-[100px] z-20">
+            <button 
+              onClick={handleSaveConfig}
+              disabled={isSavingConfig}
+              className="bg-archora-black text-white px-6 py-2 text-xs font-bold uppercase tracking-widest hover:bg-archora-gold transition-colors flex items-center gap-2 rounded-sm disabled:opacity-50"
+            >
+              <CheckCircle className="w-4 h-4" /> {isSavingConfig ? 'Saving...' : publishSuccess ? 'Saved!' : 'Publish Content Changes'}
+            </button>
+          </div>
+
+          <div className="bg-white border border-gray-100 p-8 shadow-sm">
+            <h2 className="font-display text-2xl mb-6 flex items-center gap-3"><Plus className="text-archora-gold w-6 h-6"/> Homepage Row Names</h2>
+            <div className="space-y-4">
+              {homeSections.map((sec, i) => (
+                <div key={i} className="flex gap-4 items-center bg-gray-50 p-4 border border-gray-200">
+                  <div className="flex-1 grid grid-cols-2 gap-4">
+                     <input 
+                       type="text" 
+                       value={sec.title} 
+                       onChange={e => {
+                         const n = [...homeSections];
+                         n[i] = { ...n[i], title: e.target.value };
+                         setHomeSections(n);
+                       }}
+                       placeholder="Section Title" 
+                       className="w-full text-sm border p-2" 
+                     />
+                     <input 
+                       type="text" 
+                       value={sec.filter} 
+                       onChange={e => {
+                         const n = [...homeSections];
+                         n[i] = { ...n[i], filter: e.target.value };
+                         setHomeSections(n);
+                       }}
+                       placeholder="Filter by Category" 
+                       className="w-full text-sm border p-2" 
+                     />
+                  </div>
+                  <button onClick={() => setHomeSections(homeSections.filter((_, idx) => idx !== i))} className="text-red-500 hover:bg-red-50 p-2 rounded">
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+              ))}
+              <button 
+                onClick={() => setHomeSections([...homeSections, { title: 'New Row', filter: '' }])}
+                className="text-xs uppercase tracking-widest font-semibold p-4 border border-dashed border-gray-300 w-full hover:bg-gray-50 text-gray-600">
+                + Add Row
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'inquiries' && (
+        <QuotesAdminTab />
+      )}
+
+      {activeTab === 'coupons' && (
+        <CouponsAdminTab />
+      )}
+
+      {activeTab === 'settings' && (
+        <div className="space-y-8">
+          <div className="flex justify-end p-4 bg-white border border-gray-100 shadow-sm sticky top-[100px] z-20">
+            <button 
+              onClick={handleSaveConfig}
+              disabled={isSavingConfig}
+              className="bg-archora-black text-white px-6 py-2 text-xs font-bold uppercase tracking-widest hover:bg-archora-gold transition-colors flex items-center gap-2 rounded-sm disabled:opacity-50"
+            >
+              <CheckCircle className="w-4 h-4" /> {isSavingConfig ? 'Saving...' : publishSuccess ? 'Saved!' : 'Publish Content Changes'}
+            </button>
+          </div>
+
+          <div className="bg-white border border-gray-100 p-8 shadow-sm">
+            <h2 className="font-display text-2xl mb-6">Logo Configuration</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <label className="block text-sm mb-2">Logo Type</label>
+                <select 
+                  value={logoConfig.type} 
+                  onChange={e => setLogoConfig({...logoConfig, type: e.target.value as 'text' | 'image'})}
+                  className="w-full border p-2 text-sm max-w-xs"
+                >
+                  <option value="text">Text</option>
+                  <option value="image">Image</option>
+                </select>
+              </div>
+              
+              {logoConfig.type === 'text' && (
+                <div>
+                  <label className="block text-sm mb-2">Logo Text</label>
+                  <input 
+                    type="text" 
+                    value={logoConfig.text} 
+                    onChange={e => setLogoConfig({...logoConfig, text: e.target.value})}
+                    className="w-full border p-2 text-sm"
+                  />
+                </div>
+              )}
+
+              {logoConfig.type === 'image' && (
+                <div>
+                  <label className="block text-sm mb-2">Logo Image</label>
+                  <div className="flex flex-col gap-2">
+                    {logoConfig.imageUrl && <img src={logoConfig.imageUrl} className="h-12 w-auto object-contain bg-gray-100 p-2 border" alt="Logo Preview" />}
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={async e => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const compressed = await compressImage(file, 400);
+                          setLogoConfig({...logoConfig, imageUrl: compressed});
+                        }
+                      }}
+                      className="w-full border p-2 text-sm bg-white"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-100 p-8 shadow-sm">
+            <h2 className="font-display text-2xl mb-6">Menu Items (Hamburger)</h2>
+            <div className="space-y-4">
+              {menuItems.map((item, i) => (
+                <div key={item.id} className="flex gap-4 items-center bg-gray-50 p-4 border border-gray-200">
+                  <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <input 
+                       type="text" 
+                       value={item.label} 
+                       onChange={e => {
+                         const n = [...menuItems];
+                         n[i] = { ...n[i], label: e.target.value };
+                         setMenuItems(n);
+                       }}
+                       placeholder="Menu Label" 
+                       className="w-full text-sm border p-2" 
+                     />
+                     <select 
+                       value={item.action} 
+                       onChange={e => {
+                         const n = [...menuItems];
+                         n[i] = { ...n[i], action: e.target.value };
+                         setMenuItems(n);
+                       }}
+                       className="w-full text-sm border p-2 bg-white" 
+                     >
+                       <option value="home">Home</option>
+                       <option value="shop">Shop</option>
+                       <option value="cart">Cart</option>
+                       <option value="wishlist">Wishlist</option>
+                       <option value="tracking">Track Order</option>
+                     </select>
+                  </div>
+                  <button onClick={() => setMenuItems(menuItems.filter(m => m.id !== item.id))} className="text-red-500 hover:bg-red-50 p-2 rounded">
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+              ))}
+              <button 
+                onClick={() => setMenuItems([...menuItems, { id: Date.now().toString(), label: 'New Menu', action: 'shop' }])}
+                className="text-xs uppercase tracking-widest font-semibold p-4 border border-dashed border-gray-300 w-full hover:bg-gray-50 text-gray-600">
+                + Add Menu Item
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -440,6 +807,17 @@ export const AdminView = () => {
                       </select>
                     </div>
                   </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs uppercase tracking-widest text-gray-600 mb-1">Sub Category (Optional)</label>
+                      <input type="text" value={pSubCategory} onChange={e=>setPSubCategory(e.target.value)} className="w-full border border-gray-200 px-3 py-2 text-sm focus:border-archora-black outline-none" placeholder="e.g. Chairs" />
+                    </div>
+                    <div>
+                      <label className="block text-xs uppercase tracking-widest text-gray-600 mb-1">Materials (Optional)</label>
+                      <input type="text" value={pMaterials} onChange={e=>setPMaterials(e.target.value)} className="w-full border border-gray-200 px-3 py-2 text-sm focus:border-archora-black outline-none" placeholder="e.g. Oak Wood, Leather" />
+                    </div>
+                  </div>
 
                   <div>
                     <label className="block text-xs uppercase tracking-widest text-gray-600 mb-1">Description *</label>
@@ -476,46 +854,12 @@ export const AdminView = () => {
                       type="file" 
                       accept="image/*"
                       multiple
-                      onChange={(e) => {
-                         const files = Array.from(e.target.files || []);
-                         Promise.all(files.map(file => {
-                             return new Promise<string>((resolve) => {
-                                 const reader = new FileReader();
-                                 reader.onloadend = () => {
-                                     const img = new window.Image();
-                                     img.onload = () => {
-                                         const canvas = document.createElement('canvas');
-                                         let width = img.width;
-                                         let height = img.height;
-                                         const max_size = 800;
-                                         
-                                         if (width > height) {
-                                             if (width > max_size) {
-                                                 height *= max_size / width;
-                                                 width = max_size;
-                                             }
-                                         } else {
-                                             if (height > max_size) {
-                                                 width *= max_size / height;
-                                                 height = max_size;
-                                             }
-                                         }
-                                         
-                                         canvas.width = width;
-                                         canvas.height = height;
-                                         const ctx = canvas.getContext('2d');
-                                         ctx?.drawImage(img, 0, 0, width, height);
-                                         resolve(canvas.toDataURL('image/jpeg', 0.7));
-                                     };
-                                     img.src = reader.result as string;
-                                 };
-                                 reader.readAsDataURL(file);
-                             });
-                         })).then(base64Images => {
-                             setPImages(prev => {
-                                const currentUrls = prev.filter(img => img.trim() !== '');
-                                return [...base64Images, ...currentUrls];
-                             });
+                      onChange={async (e) => {
+                         const files = Array.from(e.target.files || []) as File[];
+                         const base64Images = await Promise.all(files.map(f => compressImage(f, 800)));
+                         setPImages(prev => {
+                            const currentUrls = prev.filter(img => img.trim() !== '');
+                            return [...base64Images, ...currentUrls];
                          });
                          e.target.value = '';
                       }}
@@ -608,6 +952,547 @@ export const AdminView = () => {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {activeTab === 'layout' && (
+        <div className="space-y-8 animate-fade-in pb-12">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-display font-medium tracking-wide">Layout & Header Customizer</h2>
+            <button 
+              onClick={handleSaveConfig}
+              disabled={isSavingConfig}
+              className={`text-white px-6 py-2 rounded-md font-medium transition-colors text-sm uppercase tracking-wider flex items-center gap-2 ${publishSuccess ? 'bg-green-600 hover:bg-green-700' : 'bg-archora-gold hover:bg-black'} disabled:opacity-50`}
+            >
+              {isSavingConfig ? 'Publishing...' : publishSuccess ? 'Saved!' : 'Publish Layout Changes'}
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* 1. Header & Navigation */}
+            <div className="bg-white p-6 border rounded-sm shadow-sm space-y-4">
+              <h3 className="font-bold text-sm uppercase tracking-widest text-gray-500 border-b pb-2">1. Header & Navigation</h3>
+              
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium mb-3">
+                  <input 
+                    type="checkbox" 
+                    checked={layoutConfig.announcementBar.show}
+                    onChange={e => setLayoutConfig({...layoutConfig, announcementBar: {...layoutConfig.announcementBar, show: e.target.checked}})}
+                  /> 
+                  Show Announcement Bar
+                </label>
+              </div>
+              
+              {layoutConfig.announcementBar.show && (
+                <>
+                  <div>
+                    <label className="block text-xs uppercase tracking-widest text-gray-600 mb-1">Bar Text</label>
+                    <input 
+                      type="text" 
+                      value={layoutConfig.announcementBar.text}
+                      onChange={e => setLayoutConfig({...layoutConfig, announcementBar: {...layoutConfig.announcementBar, text: e.target.value}})}
+                      className="w-full border p-2 text-sm bg-gray-50"
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="col-span-2">
+                      <label className="block text-xs uppercase tracking-widest text-gray-600 mb-1">Background Color</label>
+                      <input 
+                        type="color" 
+                        value={layoutConfig.announcementBar.bgColor}
+                        onChange={e => setLayoutConfig({...layoutConfig, announcementBar: {...layoutConfig.announcementBar, bgColor: e.target.value}})}
+                        className="w-full h-8 cursor-pointer"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs uppercase tracking-widest text-gray-600 mb-1">Text Color</label>
+                      <input 
+                        type="color" 
+                        value={layoutConfig.announcementBar.textColor}
+                        onChange={e => setLayoutConfig({...layoutConfig, announcementBar: {...layoutConfig.announcementBar, textColor: e.target.value}})}
+                        className="w-full h-8 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+              
+              <div className="pt-4 border-t">
+                <label className="block text-xs uppercase tracking-widest text-gray-600 mb-1">Header Background Color</label>
+                <input 
+                  type="color" 
+                  value={layoutConfig.header.bgColor}
+                  onChange={e => setLayoutConfig({...layoutConfig, header: {...layoutConfig.header, bgColor: e.target.value}})}
+                  className="w-full h-8 cursor-pointer"
+                />
+              </div>
+            </div>
+
+            {/* 2. Logo Configuration */}
+            <div className="bg-white p-6 border rounded-sm shadow-sm space-y-4">
+              <h3 className="font-bold text-sm uppercase tracking-widest text-gray-500 border-b pb-2">2. Logo Configuration</h3>
+              
+              <div className="flex items-center gap-4 mb-4">
+                <label className="flex items-center gap-2 text-sm font-medium">
+                  <input 
+                    type="radio" 
+                    name="logoType"
+                    checked={layoutConfig.logoSettings.type === 'text'}
+                    onChange={() => setLayoutConfig({...layoutConfig, logoSettings: {...layoutConfig.logoSettings, type: 'text'}})}
+                  /> 
+                  Text Logo
+                </label>
+                <label className="flex items-center gap-2 text-sm font-medium">
+                  <input 
+                    type="radio" 
+                    name="logoType"
+                    checked={layoutConfig.logoSettings.type === 'image'}
+                    onChange={() => setLayoutConfig({...layoutConfig, logoSettings: {...layoutConfig.logoSettings, type: 'image'}})}
+                  /> 
+                  Image Logo
+                </label>
+              </div>
+
+              {layoutConfig.logoSettings.type === 'text' ? (
+                <div>
+                  <label className="block text-xs uppercase tracking-widest text-gray-600 mb-1">Logo Text</label>
+                  <input 
+                    type="text" 
+                    value={layoutConfig.logoSettings.text}
+                    onChange={e => setLayoutConfig({...layoutConfig, logoSettings: {...layoutConfig.logoSettings, text: e.target.value}})}
+                    className="w-full border p-2 text-sm bg-gray-50"
+                  />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs uppercase tracking-widest text-gray-600 mb-1">Image URL</label>
+                    <input 
+                      type="text" 
+                      value={layoutConfig.logoSettings.imageUrl}
+                      onChange={e => setLayoutConfig({...layoutConfig, logoSettings: {...layoutConfig.logoSettings, imageUrl: e.target.value}})}
+                      className="w-full border p-2 text-sm bg-gray-50"
+                      placeholder="https://..."
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs uppercase tracking-widest text-gray-600 mb-1">Mobile Height (px)</label>
+                      <input 
+                        type="range" 
+                        min="20" max="80" 
+                        value={layoutConfig.logoSettings.mobileHeight}
+                        onChange={e => setLayoutConfig({...layoutConfig, logoSettings: {...layoutConfig.logoSettings, mobileHeight: Number(e.target.value)}})}
+                        className="w-full"
+                      />
+                      <div className="text-xs text-center">{layoutConfig.logoSettings.mobileHeight}px</div>
+                    </div>
+                    <div>
+                      <label className="block text-xs uppercase tracking-widest text-gray-600 mb-1">Desktop Height (px)</label>
+                      <input 
+                        type="range" 
+                        min="24" max="100" 
+                        value={layoutConfig.logoSettings.desktopHeight}
+                        onChange={e => setLayoutConfig({...layoutConfig, logoSettings: {...layoutConfig.logoSettings, desktopHeight: Number(e.target.value)}})}
+                        className="w-full"
+                      />
+                      <div className="text-xs text-center">{layoutConfig.logoSettings.desktopHeight}px</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* 3. Category Section Title Editor */}
+            <div className="bg-white p-6 border rounded-sm shadow-sm space-y-4">
+              <h3 className="font-bold text-sm uppercase tracking-widest text-gray-500 border-b pb-2">3. Category Section Title Editor</h3>
+              
+              <div>
+                <label className="block text-xs uppercase tracking-widest text-gray-600 mb-1">Heading Text</label>
+                <input 
+                  type="text" 
+                  value={layoutConfig.categorySection.title}
+                  onChange={e => setLayoutConfig({...layoutConfig, categorySection: {...layoutConfig.categorySection, title: e.target.value}})}
+                  className="w-full border p-2 text-sm bg-gray-50 mb-3"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs uppercase tracking-widest text-gray-600 mb-1">Font Size (px)</label>
+                  <input 
+                    type="range" 
+                    min="10" max="36" 
+                    value={layoutConfig.categorySection.fontSize}
+                    onChange={e => setLayoutConfig({...layoutConfig, categorySection: {...layoutConfig.categorySection, fontSize: Number(e.target.value)}})}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-center">{layoutConfig.categorySection.fontSize}px</div>
+                </div>
+                <div>
+                  <label className="block text-xs uppercase tracking-widest text-gray-600 mb-1">Letter Spacing (px)</label>
+                  <input 
+                    type="range" 
+                    min="0" max="10" step="0.5"
+                    value={layoutConfig.categorySection.letterSpacing}
+                    onChange={e => setLayoutConfig({...layoutConfig, categorySection: {...layoutConfig.categorySection, letterSpacing: Number(e.target.value)}})}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-center">{layoutConfig.categorySection.letterSpacing}px</div>
+                </div>
+                <div>
+                  <label className="block text-xs uppercase tracking-widest text-gray-600 mb-1">Margin Top (px)</label>
+                  <input 
+                    type="range" 
+                    min="0" max="100" 
+                    value={layoutConfig.categorySection.marginTop}
+                    onChange={e => setLayoutConfig({...layoutConfig, categorySection: {...layoutConfig.categorySection, marginTop: Number(e.target.value)}})}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-center">{layoutConfig.categorySection.marginTop}px</div>
+                </div>
+                <div>
+                  <label className="block text-xs uppercase tracking-widest text-gray-600 mb-1">Margin Bottom (px)</label>
+                  <input 
+                    type="range" 
+                    min="0" max="100" 
+                    value={layoutConfig.categorySection.marginBottom}
+                    onChange={e => setLayoutConfig({...layoutConfig, categorySection: {...layoutConfig.categorySection, marginBottom: Number(e.target.value)}})}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-center">{layoutConfig.categorySection.marginBottom}px</div>
+                </div>
+              </div>
+            </div>
+
+            {/* 4. Dynamic Category Cards Manager */}
+            <div className="bg-white p-6 border rounded-sm shadow-sm space-y-4">
+              <h3 className="font-bold text-sm uppercase tracking-widest text-gray-500 border-b pb-2">4. Dynamic Category Cards Layout</h3>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs uppercase tracking-widest text-gray-600 mb-1">Card Width (px)</label>
+                  <input 
+                    type="range" 
+                    min="60" max="300" 
+                    value={layoutConfig.categoryCards.width}
+                    onChange={e => setLayoutConfig({...layoutConfig, categoryCards: {...layoutConfig.categoryCards, width: Number(e.target.value)}})}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-center">{layoutConfig.categoryCards.width}px</div>
+                </div>
+                <div>
+                  <label className="block text-xs uppercase tracking-widest text-gray-600 mb-1">Card Height (px)</label>
+                  <input 
+                    type="range" 
+                    min="60" max="300" 
+                    value={layoutConfig.categoryCards.height}
+                    onChange={e => setLayoutConfig({...layoutConfig, categoryCards: {...layoutConfig.categoryCards, height: Number(e.target.value)}})}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-center">{layoutConfig.categoryCards.height}px</div>
+                </div>
+                <div>
+                  <label className="block text-xs uppercase tracking-widest text-gray-600 mb-1">Corner Radius (px)</label>
+                  <input 
+                    type="range" 
+                    min="0" max="150" 
+                    value={layoutConfig.categoryCards.cornerRadius}
+                    onChange={e => setLayoutConfig({...layoutConfig, categoryCards: {...layoutConfig.categoryCards, cornerRadius: Number(e.target.value)}})}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-center">{layoutConfig.categoryCards.cornerRadius}px</div>
+                </div>
+                <div>
+                  <label className="block text-xs uppercase tracking-widest text-gray-600 mb-1">Grid Gap (px)</label>
+                  <input 
+                    type="range" 
+                    min="0" max="64" 
+                    value={layoutConfig.categoryCards.gap}
+                    onChange={e => setLayoutConfig({...layoutConfig, categoryCards: {...layoutConfig.categoryCards, gap: Number(e.target.value)}})}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-center">{layoutConfig.categoryCards.gap}px</div>
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs uppercase tracking-widest text-gray-600 mb-1">Aspect Ratio</label>
+                  <select 
+                    value={layoutConfig.categoryCards.aspectRatio}
+                    onChange={e => setLayoutConfig({...layoutConfig, categoryCards: {...layoutConfig.categoryCards, aspectRatio: e.target.value}})}
+                    className="w-full border p-2 text-sm bg-gray-50"
+                  >
+                    <option value="1/1">1:1 (Square)</option>
+                    <option value="4/3">4:3 (Landscape)</option>
+                    <option value="16/9">16:9 (Wide)</option>
+                    <option value="3/4">3:4 (Portrait)</option>
+                    <option value="auto">Auto</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="mt-6 pt-4 border-t">
+                <p className="text-xs text-gray-500 italic mb-2">Note: You can add/remove category items in the "Categories" tab.</p>
+                <button 
+                  onClick={() => window.location.hash = '#/admin/categories'}
+                  className="text-archora-gold hover:underline text-sm font-medium"
+                >
+                  Manage Category Items →
+                </button>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+};
+
+const QuotesAdminTab = () => {
+  const [quotes, setQuotes] = useState<QuoteRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchQuotes = async () => {
+      try {
+        const { collection, getDocs, orderBy, query } = await import('firebase/firestore');
+        const { db } = await import('../firebase');
+        const q = query(collection(db, 'quotes'), orderBy('createdAt', 'desc'));
+        const querySnapshot = await getDocs(q);
+        const fetchedQuotes: QuoteRequest[] = [];
+        querySnapshot.forEach((doc) => {
+          const d = doc.data();
+          fetchedQuotes.push({
+            id: doc.id,
+            productId: d.productId,
+            productName: d.productName,
+            customerName: d.customerName,
+            customerEmail: d.customerEmail,
+            size: d.size,
+            color: d.color,
+            material: d.material,
+            notes: d.notes,
+            status: d.status,
+            date: d.createdAt ? new Date(d.createdAt.toMillis()).toLocaleString() : 'N/A'
+          });
+        });
+        setQuotes(fetchedQuotes);
+      } catch (err) {
+        console.error('Failed to fetch quotes', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchQuotes();
+  }, []);
+
+  const updateStatus = async (quoteId: string, newStatus: string) => {
+    try {
+      const { doc, updateDoc } = await import('firebase/firestore');
+      const { db } = await import('../firebase');
+      await updateDoc(doc(db, 'quotes', quoteId), { status: newStatus });
+      setQuotes(prev => prev.map(q => q.id === quoteId ? { ...q, status: newStatus as any } : q));
+    } catch (err) {
+      alert('Update failed');
+    }
+  };
+
+  if (loading) return <div className="p-8 text-center text-gray-500">Loading quotes...</div>;
+  if (quotes.length === 0) return <div className="p-8 text-center text-gray-500">No quotes received yet.</div>;
+
+  return (
+    <div className="space-y-6">
+      <h2 className="font-display text-2xl mb-6">Custom Quote Requests</h2>
+      {quotes.map(quote => (
+        <div key={quote.id} className="bg-white p-6 border border-gray-100 shadow-sm flex flex-col md:flex-row gap-6">
+          <div className="flex-1">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display text-xl">{quote.productName}</h3>
+              <span className="text-xs text-gray-400">{quote.date}</span>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-y-4 gap-x-8 mb-4">
+              <div><span className="text-gray-500 text-sm block">Customer</span><strong className="text-sm block">{quote.customerName}</strong><a href={`mailto:${quote.customerEmail}`} className="text-xs text-blue-600 hover:underline">{quote.customerEmail}</a></div>
+              <div><span className="text-gray-500 text-sm block">Requested Size</span><span className="text-sm block">{quote.size || 'N/A'}</span></div>
+              <div><span className="text-gray-500 text-sm block">Color/Finish</span><span className="text-sm block">{quote.color || 'N/A'}</span></div>
+              <div><span className="text-gray-500 text-sm block">Material</span><span className="text-sm block">{quote.material || 'N/A'}</span></div>
+            </div>
+            
+            {quote.notes && (
+              <div className="bg-gray-50 p-4 text-sm text-gray-700 italic border-l-2 border-archora-gold">
+                "{quote.notes}"
+              </div>
+            )}
+          </div>
+          
+          <div className="md:w-48 flex flex-col gap-4 border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-6 justify-center">
+             <span className="text-xs font-semibold uppercase tracking-widest text-gray-500 text-center block mb-2">Status</span>
+             <select 
+               value={quote.status} 
+               onChange={(e) => updateStatus(quote.id, e.target.value)}
+               className={`w-full p-2 text-sm text-center border font-semibold outline-none ${
+                 quote.status === 'Pending' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                 quote.status === 'Reviewed' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                 'bg-green-50 text-green-700 border-green-200'
+               }`}
+             >
+               <option value="Pending">Pending</option>
+               <option value="Reviewed">Reviewed</option>
+               <option value="Responded">Responded</option>
+             </select>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const CouponsAdminTab = () => {
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+  const [newCoupon, setNewCoupon] = useState({ code: '', type: 'percentage', value: 10, expiryDate: '' });
+
+  useEffect(() => {
+    const fetchCoupons = async () => {
+      try {
+        const { collection, getDocs, onSnapshot } = await import('firebase/firestore');
+        const { db } = await import('../firebase');
+        const unsub = onSnapshot(collection(db, 'coupons'), (snapshot) => {
+          const list: Coupon[] = [];
+          snapshot.forEach(doc => {
+            list.push({ id: doc.id, ...doc.data() } as Coupon);
+          });
+          setCoupons(list);
+          setLoading(false);
+        }, (error) => {
+          console.error("Failed to fetch coupons", error);
+          setLoading(false);
+        });
+        return () => unsub();
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchCoupons();
+  }, []);
+
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const { collection, setDoc, doc } = await import('firebase/firestore');
+      const { db } = await import('../firebase');
+      const code = newCoupon.code.toUpperCase().trim();
+      if (!code) return alert('Invalid code');
+      await setDoc(doc(db, 'coupons', code), {
+        code,
+        type: newCoupon.type,
+        value: Number(newCoupon.value),
+        expiryDate: newCoupon.expiryDate,
+        isActive: true
+      });
+      setShowAdd(false);
+      setNewCoupon({ code: '', type: 'percentage', value: 10, expiryDate: '' });
+    } catch(e) {
+      alert('Failed to add coupon');
+    }
+  };
+
+  const toggleActive = async (id: string, currentStatus: boolean) => {
+    try {
+      const { doc, updateDoc } = await import('firebase/firestore');
+      const { db } = await import('../firebase');
+      await updateDoc(doc(db, 'coupons', id), { isActive: !currentStatus });
+    } catch(e) {
+      alert('Update failed');
+    }
+  }
+  
+  const handleDelete = async (id: string) => {
+    try {
+      const { doc, deleteDoc } = await import('firebase/firestore');
+      const { db } = await import('../firebase');
+      await deleteDoc(doc(db, 'coupons', id));
+    } catch (e) {
+      alert('Delete failed');
+    }
+  }
+
+  if (loading) return <div className="p-8 text-center text-gray-500">Loading coupons...</div>;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="font-display text-2xl">Coupons & Discounts</h2>
+        <button onClick={() => setShowAdd(!showAdd)} className="bg-archora-black text-white px-6 py-2 text-xs font-bold uppercase tracking-widest hover:bg-archora-gold transition-colors flex items-center gap-2 rounded-sm relative z-20">
+          <Plus className="w-4 h-4" /> Add Coupon
+        </button>
+      </div>
+
+      {showAdd && (
+        <form onSubmit={handleAdd} className="bg-white p-6 border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 items-end mb-8 relative z-10">
+           <div className="flex-1 w-full">
+             <label className="text-sm block mb-1">Coupon Code</label>
+             <input required type="text" className="w-full border p-2 text-sm uppercase" value={newCoupon.code} onChange={e=>setNewCoupon({...newCoupon, code: e.target.value.toUpperCase()})} placeholder="e.g. SUMMER20" />
+           </div>
+           <div className="w-full md:w-32">
+             <label className="text-sm block mb-1">Type</label>
+             <select className="w-full border p-2 text-sm bg-white" value={newCoupon.type} onChange={e=>setNewCoupon({...newCoupon, type: e.target.value})}>
+               <option value="percentage">Percentage %</option>
+               <option value="fixed">Fixed Amount $</option>
+             </select>
+           </div>
+           <div className="w-full md:w-32">
+             <label className="text-sm block mb-1">Value</label>
+             <input required type="number" min="1" className="w-full border p-2 text-sm" value={newCoupon.value} onChange={e=>setNewCoupon({...newCoupon, value: e.target.value as any})} />
+           </div>
+           <div className="w-full md:w-48">
+             <label className="text-sm block mb-1">Expiry Date (Optional)</label>
+             <input type="date" className="w-full border p-2 text-sm" value={newCoupon.expiryDate} onChange={e=>setNewCoupon({...newCoupon, expiryDate: e.target.value})} />
+           </div>
+           <button type="submit" className="bg-archora-black text-white px-6 py-2 h-[38px] text-xs font-bold uppercase tracking-widest hover:bg-archora-gold transition-colors">
+             Save
+           </button>
+        </form>
+      )}
+
+      {coupons.length === 0 ? (
+        <div className="p-8 text-center text-gray-500 bg-white border border-gray-100">No coupons active.</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {coupons.map(coupon => (
+            <div key={coupon.id} className={`bg-white p-6 border-2 transition-all ${coupon.isActive ? 'border-archora-gold/20' : 'border-gray-100 opacity-60'}`}>
+               <div className="flex justify-between items-start mb-4">
+                 <h3 className="font-mono text-xl font-bold tracking-wider">{coupon.code}</h3>
+                 <div className="flex gap-2">
+                   <button onClick={() => toggleActive(coupon.id, coupon.isActive)} className="text-xs font-medium uppercase tracking-wider text-gray-500 hover:text-archora-black">
+                     {coupon.isActive ? 'Disable' : 'Enable'}
+                   </button>
+                   <button onClick={() => handleDelete(coupon.id)} className="text-red-500 hover:text-red-700">
+                     <Trash2 className="w-4 h-4" />
+                   </button>
+                 </div>
+               </div>
+               <div className="space-y-2">
+                 <div className="flex justify-between text-sm">
+                   <span className="text-gray-500">Discount</span>
+                   <strong className="text-archora-black">{coupon.type === 'percentage' ? `${coupon.value}% OFF` : `$${coupon.value} OFF`}</strong>
+                 </div>
+                 <div className="flex justify-between text-sm">
+                   <span className="text-gray-500">Expiry</span>
+                   <span className="text-archora-black">{coupon.expiryDate || 'Never'}</span>
+                 </div>
+                 <div className="flex justify-between text-sm">
+                   <span className="text-gray-500">Status</span>
+                   <span className={coupon.isActive ? 'text-green-600 font-medium' : 'text-gray-400'}>
+                     {coupon.isActive ? 'Active' : 'Inactive'}
+                   </span>
+                 </div>
+               </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

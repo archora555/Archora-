@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { ProductCard } from '../components/ProductCard';
-import { ProductModal } from '../components/ProductModal';
 import { Box } from 'lucide-react';
-import { Product } from '../types';
+import { useNavigate } from 'react-router-dom';
 
 export const ShopView = () => {
   const { products, searchQuery, setSearchQuery } = useAppContext();
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedCat, setSelectedCat] = useState<string>('All');
+  const navigate = useNavigate();
   
   const categories = ['All', 'Living', 'Bedroom', 'Dining', 'Office Use Pro', 'New Arrivals', 'Sale', 'Best Seller'];
 
@@ -90,7 +89,7 @@ export const ShopView = () => {
             <ProductCard 
               key={product.id} 
               product={product} 
-              onClick={() => setSelectedProduct(product)} 
+              onClick={() => navigate(`/product/${product.id}`)} 
             />
           ))
         ) : (
@@ -100,13 +99,6 @@ export const ShopView = () => {
           </div>
         )}
       </div>
-
-      {selectedProduct && (
-        <ProductModal 
-          product={selectedProduct} 
-          onClose={() => setSelectedProduct(null)} 
-        />
-      )}
     </div>
   );
 };

@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useAppContext } from '../context/AppContext';
 import { motion } from 'motion/react';
 import { ProductCard } from '../components/ProductCard';
-import { ProductModal } from '../components/ProductModal';
-import { Product } from '../types';
+import { useNavigate } from 'react-router-dom';
 
 export const WishlistView = () => {
   const { wishlist, products, setCurrentView } = useAppContext();
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const navigate = useNavigate();
 
   const wishlistedProducts = products.filter(p => wishlist.includes(p.id));
 
@@ -39,18 +38,11 @@ export const WishlistView = () => {
           >
             <ProductCard 
               product={product} 
-              onClick={() => setSelectedProduct(product)} 
+              onClick={() => navigate(`/product/${product.id}`)} 
             />
           </motion.div>
         ))}
       </div>
-
-      {selectedProduct && (
-        <ProductModal 
-          product={selectedProduct} 
-          onClose={() => setSelectedProduct(null)} 
-        />
-      )}
     </div>
   );
 };

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Product } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Heart, Map, ChevronLeft, ChevronRight, Check, Box } from 'lucide-react';
+import { X, Heart, Map, ChevronLeft, ChevronRight, Check, Box, MessageCircle, Star } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import '@google/model-viewer';
 
@@ -16,6 +16,36 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
   const [selectedColor, setSelectedColor] = useState(product.colors[0] || 'Default');
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+  const [showQuoteForm, setShowQuoteForm] = useState(false);
+  const [quoteData, setQuoteData] = useState({ name: '', email: '', size: '', color: '', material: '', notes: '' });
+  const [submittingQuote, setSubmittingQuote] = useState(false);
+  
+  const submitQuoteRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmittingQuote(true);
+    try {
+      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+      const { db } = await import('../firebase');
+      await addDoc(collection(db, 'quotes'), {
+        productId: product.id,
+        productName: product.name,
+        customerName: quoteData.name,
+        customerEmail: quoteData.email,
+        size: quoteData.size,
+        color: quoteData.color,
+        material: quoteData.material,
+        notes: quoteData.notes,
+        status: 'Pending',
+        createdAt: serverTimestamp(),
+      });
+      alert('Custom quote request submitted successfully!');
+      setShowQuoteForm(false);
+    } catch(err: any) {
+      alert('Failed to submit quote request: ' + err.message);
+    } finally {
+      setSubmittingQuote(false);
+    }
+  };
 
   const isWishlisted = wishlist.includes(product.id);
 
@@ -51,7 +81,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
           initial={{ opacity: 0, y: 50, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.95 }}
-          className="relative w-full max-w-6xl bg-white shadow-2xl flex flex-col md:flex-row overflow-hidden max-h-[90vh] md:max-h-[85vh]"
+          className="relative w-full max-w-6xl bg-white shadow-2xl flex flex-col md:flex-row overflow-y-auto md:overflow-hidden max-h-[90vh] md:max-h-[85vh]"
         >
           <button 
             onClick={onClose}
@@ -61,7 +91,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
           </button>
 
           {/* Left: Images / AR */}
-          <div className="w-full md:w-1/2 relative bg-[#F9F9F9] h-[300px] md:h-auto overflow-hidden">
+          <div className="w-full md:w-1/2 relative bg-[#F9F9F9] aspect-square flex-shrink-0">
             <AnimatePresence mode="wait">
               {showARViewer && product.modelUrl ? (
                 <motion.div 
@@ -73,7 +103,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                 >
                   <model-viewer
                     id="product-model-viewer"
-                    src={product.modelUrl}
+                    src={product.modelUrl || undefined}
                     alt={product.name}
                     ar
                     ar-modes="webxr scene-viewer quick-look"
@@ -101,7 +131,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
-                  src={product.images[currentImageIdx]} 
+                  src={product.images[currentImageIdx] || undefined} 
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
@@ -138,7 +168,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
           </div>
 
           {/* Right: Details */}
-          <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col overflow-y-auto">
+          <div className="w-full md:w-1/2 p-8 md:p-12 flex-1 flex flex-col md:overflow-y-auto min-h-0">
             <div className="flex justify-between items-start mb-2">
               <span className="text-archora-gold text-xs font-semibold uppercase tracking-widest">{product.category}</span>
               <button onClick={() => toggleWishlist(product.id)} className="text-gray-400 hover:text-archora-gold transition-colors">
@@ -245,9 +275,208 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
               </button>
             </div>
 
+            <div className="mt-4 flex flex-col gap-3">
+              <button 
+                onClick={() => {
+                  const message = encodeURIComponent(`Hi, I want to order ${product.name} for $${product.price}. Link: ${window.location.origin}/shop?productId=${product.id}`);
+                  window.open(`https://wa.me/1234567890?text=${message}`, '_blank');
+                }}
+                className="w-full bg-[#25D366] text-white py-3 px-6 uppercase tracking-widest text-sm font-medium hover:bg-[#1ebd5c] transition-colors flex items-center justify-center gap-2"
+              >
+                <MessageCircle className="w-4 h-4" /> Order on WhatsApp
+              </button>
+
+              <button 
+                onClick={() => setShowQuoteForm(true)}
+                className="w-full border border-gray-300 text-gray-700 py-3 px-6 uppercase tracking-widest text-sm font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+              >
+                Request Custom Quote
+              </button>
+            </div>
+
+            <hr className="my-8 border-gray-100" />
+            <div className="mt-auto">
+               <h3 className="text-xl font-display font-medium mb-4">Customer Reviews</h3>
+               <ReviewsSection productId={product.id} />
+            </div>
+
           </div>
         </motion.div>
+
+        {showQuoteForm && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowQuoteForm(false)} />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="relative bg-white p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto"
+            >
+              <button 
+                onClick={() => setShowQuoteForm(false)}
+                className="absolute top-4 right-4 text-gray-500 hover:text-black"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <h3 className="font-display text-2xl mb-6">Request Custom Quote</h3>
+              <form onSubmit={submitQuoteRequest} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Your Name</label>
+                  <input required type="text" className="w-full border p-2" value={quoteData.name} onChange={e => setQuoteData({...quoteData, name: e.target.value})} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Your Email</label>
+                  <input required type="email" className="w-full border p-2" value={quoteData.email} onChange={e => setQuoteData({...quoteData, email: e.target.value})} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Custom Size Request</label>
+                  <input type="text" placeholder="e.g. 200cm x 100cm" className="w-full border p-2" value={quoteData.size} onChange={e => setQuoteData({...quoteData, size: e.target.value})} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Color / Finish Request</label>
+                  <input type="text" placeholder="e.g. Walnut wood, Matte Black metal" className="w-full border p-2" value={quoteData.color} onChange={e => setQuoteData({...quoteData, color: e.target.value})} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Material Preference</label>
+                  <input type="text" placeholder="e.g. Leather, Linen, Oak" className="w-full border p-2" value={quoteData.material} onChange={e => setQuoteData({...quoteData, material: e.target.value})} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Additional Notes</label>
+                  <textarea className="w-full border p-2 h-24" value={quoteData.notes} onChange={e => setQuoteData({...quoteData, notes: e.target.value})} />
+                </div>
+                <button type="submit" disabled={submittingQuote} className="w-full bg-archora-black text-white hover:bg-archora-gold transition-colors py-3 uppercase text-sm tracking-widest font-medium disabled:opacity-50">
+                  {submittingQuote ? 'Submitting...' : 'Submit Request'}
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
       </div>
     </AnimatePresence>
+  );
+};
+
+const ReviewsSection = ({ productId }: { productId: string }) => {
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [name, setName] = useState('');
+  const [comment, setComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+         const { collection, query, where, getDocs, orderBy, onSnapshot } = await import('firebase/firestore');
+         const { db } = await import('../firebase');
+         const q = query(collection(db, 'reviews'), where('productId', '==', productId), orderBy('createdAt', 'desc'));
+         const unsub = onSnapshot(q, (snapshot) => {
+           const revs: any[] = [];
+           snapshot.forEach(doc => revs.push({ id: doc.id, ...doc.data() }));
+           setReviews(revs);
+           setLoading(false);
+         }, (error) => {
+           console.error("Failed to fetch reviews", error);
+           setLoading(false);
+         });
+         return () => unsub();
+      } catch (e) {
+         console.error(e);
+         setLoading(false);
+      }
+    };
+    fetchReviews();
+  }, [productId]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+      const { db } = await import('../firebase');
+      await addDoc(collection(db, 'reviews'), {
+        productId,
+        customerName: name,
+        rating,
+        comment,
+        createdAt: serverTimestamp(),
+      });
+      setShowForm(false);
+      setName('');
+      setComment('');
+      setRating(5);
+    } catch(err: any) {
+      alert("Failed to submit review: " + err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const average = reviews.length > 0 ? (reviews.reduce((a, b) => a + b.rating, 0) / reviews.length).toFixed(1) : 0;
+
+  if (loading) return <div className="text-sm text-gray-500">Loading reviews...</div>;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+         <div className="flex items-center gap-2">
+           <div className="flex">
+             {[1,2,3,4,5].map(star => (
+               <Star key={star} className={`w-5 h-5 ${star <= Number(average) ? 'fill-archora-gold text-archora-gold' : 'text-gray-300'}`} />
+             ))}
+           </div>
+           <span className="font-semibold text-archora-black">{average}</span>
+           <span className="text-sm text-gray-500">({reviews.length} reviews)</span>
+         </div>
+         <button onClick={() => setShowForm(!showForm)} className="text-sm font-semibold uppercase tracking-widest text-archora-gold hover:text-archora-black transition-colors">
+           Write a Review
+         </button>
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleSubmit} className="bg-gray-50 p-4 border border-gray-100 space-y-4">
+           <div>
+             <label className="block text-sm mb-1">Your Name</label>
+             <input required type="text" className="w-full border p-2 text-sm" value={name} onChange={e=>setName(e.target.value)} />
+           </div>
+           <div>
+             <label className="block text-sm mb-1">Rating</label>
+             <div className="flex gap-1">
+               {[1,2,3,4,5].map(star => (
+                 <Star 
+                   key={star} 
+                   onClick={() => setRating(star)}
+                   className={`w-6 h-6 cursor-pointer hover:scale-110 transition-transform ${star <= rating ? 'fill-archora-gold text-archora-gold' : 'text-gray-300'}`} 
+                 />
+               ))}
+             </div>
+           </div>
+           <div>
+             <label className="block text-sm mb-1">Your Feedback</label>
+             <textarea required className="w-full border p-2 text-sm h-20" value={comment} onChange={e=>setComment(e.target.value)} />
+           </div>
+           <button type="submit" disabled={submitting} className="bg-archora-black text-white px-6 py-2 text-xs font-bold uppercase tracking-widest hover:bg-archora-gold transition-colors disabled:opacity-50">
+             {submitting ? 'Submitting...' : 'Submit Review'}
+           </button>
+        </form>
+      )}
+
+      <div className="space-y-4">
+        {reviews.map(rev => (
+          <div key={rev.id} className="border-b border-gray-100 pb-4">
+            <div className="flex items-center justify-between mb-2">
+              <strong className="text-sm font-display">{rev.customerName}</strong>
+              <span className="text-xs text-gray-400">{rev.createdAt ? new Date(rev.createdAt.toMillis()).toLocaleDateString() : 'Just now'}</span>
+            </div>
+            <div className="flex mb-2">
+               {[1,2,3,4,5].map(star => (
+                 <Star key={star} className={`w-3 h-3 ${star <= rev.rating ? 'fill-archora-gold text-archora-gold' : 'text-gray-300'}`} />
+               ))}
+            </div>
+            <p className="text-sm text-gray-600">{rev.comment}</p>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
