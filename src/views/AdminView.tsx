@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
+import { useBuilder } from '../builder/BuilderContext';
 import { Package, ShoppingBag, TrendingUp, Users, Copy, Search, Plus, Trash2, Edit2, X, CheckCircle, Image, ImagePlus } from 'lucide-react';
 import { Order, Product, QuoteRequest, Coupon } from '../types';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -45,7 +46,9 @@ const compressImage = (file: File, maxSize: number = 1000): Promise<string> => {
 };
 
 export const AdminView = () => {
-  const { orders, products, setProducts, setOrders, heroBanners, setHeroBanners, subCategories, setSubCategories, homeSections, setHomeSections, logoConfig, setLogoConfig, menuItems, setMenuItems, isAdminLoggedIn, setIsAdminLoggedIn, saveSettingsToFirebase, layoutConfig, setLayoutConfig } = useAppContext();
+    const { isVisualEditMode, setIsVisualEditMode } = useAppContext();
+  const { setIsEditMode } = useBuilder();
+  const { orders, products, setProducts, setOrders, heroBanners, setHeroBanners, subCategories, setSubCategories, homeSections, setHomeSections, logoConfig, setLogoConfig, menuItems, setMenuItems, isAdminLoggedIn, setIsAdminLoggedIn, saveSettingsToFirebase, layoutConfig, setLayoutConfig} = useAppContext();
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -955,17 +958,46 @@ export const AdminView = () => {
         </div>
       )}
 
-      {activeTab === 'layout' && (
+      {activeTab === 'layout' && ( <>
+
+      <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+          <h3 className="font-semibold text-lg text-blue-900 mb-1">Visual Site Builder</h3>
+          <p className="text-sm text-blue-700">Enter full-site drag-and-drop edit mode to design your storefront structure, typography, buttons, and layout.</p>
+        </div>
+        <button 
+          onClick={() => {
+            setIsEditMode(true);
+            setIsVisualEditMode(true); // legacy compat
+            navigate('/');
+          }}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-medium whitespace-nowrap transition-colors shadow-sm"
+        >
+          Launch Visual Builder
+        </button>
+      </div>
+  
         <div className="space-y-8 animate-fade-in pb-12">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-display font-medium tracking-wide">Layout & Header Customizer</h2>
-            <button 
-              onClick={handleSaveConfig}
-              disabled={isSavingConfig}
-              className={`text-white px-6 py-2 rounded-md font-medium transition-colors text-sm uppercase tracking-wider flex items-center gap-2 ${publishSuccess ? 'bg-green-600 hover:bg-green-700' : 'bg-archora-gold hover:bg-black'} disabled:opacity-50`}
-            >
-              {isSavingConfig ? 'Publishing...' : publishSuccess ? 'Saved!' : 'Publish Layout Changes'}
-            </button>
+            <div className="flex gap-4">
+              <button
+                onClick={() => {
+                  setIsVisualEditMode(true);
+                  navigate('/');
+                }}
+                className="bg-gray-100 hover:bg-gray-200 text-archora-black px-4 py-2 rounded-md font-medium transition-colors text-sm uppercase tracking-wider flex items-center gap-2 border border-gray-300"
+              >
+                Visual Edit Mode
+              </button>
+              <button 
+                onClick={handleSaveConfig}
+                disabled={isSavingConfig}
+                className={`text-white px-6 py-2 rounded-md font-medium transition-colors text-sm uppercase tracking-wider flex items-center gap-2 ${publishSuccess ? 'bg-green-600 hover:bg-green-700' : 'bg-archora-gold hover:bg-black'} disabled:opacity-50`}
+              >
+                {isSavingConfig ? 'Publishing...' : publishSuccess ? 'Saved!' : 'Publish Layout Changes'}
+              </button>
+            </div>
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -1234,7 +1266,7 @@ export const AdminView = () => {
               <div className="mt-6 pt-4 border-t">
                 <p className="text-xs text-gray-500 italic mb-2">Note: You can add/remove category items in the "Categories" tab.</p>
                 <button 
-                  onClick={() => window.location.hash = '#/admin/categories'}
+                  onClick={() => navigate('/admin/categories')}
                   className="text-archora-gold hover:underline text-sm font-medium"
                 >
                   Manage Category Items →
@@ -1244,6 +1276,7 @@ export const AdminView = () => {
             
           </div>
         </div>
+      </>
       )}
 
     </div>

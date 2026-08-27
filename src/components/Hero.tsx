@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppContext } from '../context/AppContext';
+import { EditableWrapper } from './VisualEditor/EditableWrapper';
 
 const swipeConfidenceThreshold = 10000;
 const swipePower = (offset: number, velocity: number) => {
@@ -8,7 +9,7 @@ const swipePower = (offset: number, velocity: number) => {
 };
 
 export const Hero = () => {
-  const { setCurrentView, introFinished, heroBanners: banners, layoutConfig } = useAppContext();
+  const { setCurrentView, introFinished, heroBanners: banners, layoutConfig, setLayoutConfig } = useAppContext();
   const [[page, direction], setPage] = useState([0, 0]);
 
   // We only have 5 images, but we'll wrap around.
@@ -88,7 +89,7 @@ export const Hero = () => {
   };
 
   return (
-    <section className="relative w-full flex flex-col justify-center overflow-hidden bg-white pt-24 pb-8 md:pb-12">
+    <section className="relative w-full flex flex-col justify-center overflow-hidden bg-white pt-24 pb-4 md:pb-6">
       {/* Horizontal Banner */}
       <div className="absolute top-[72px] md:top-24 left-0 w-full bg-archora-black text-white py-2.5 flex items-center justify-center overflow-hidden z-20">
         <motion.div
@@ -106,7 +107,7 @@ export const Hero = () => {
       </div>
 
       {/* 3D Rotating Cylinder Carousel */}
-      <div className="w-full max-w-[1440px] mx-auto px-4 md:px-6 mb-8 mt-4 md:mt-12 overflow-visible">
+      <div className="w-full max-w-[1440px] mx-auto px-4 md:px-6 mb-4 mt-4 md:mt-12 overflow-visible">
         <div 
           style={{ perspective: '1800px' }} 
           className="relative w-full flex items-center justify-center"
@@ -136,7 +137,7 @@ export const Hero = () => {
                   if (swipe < -swipeConfidenceThreshold) paginate(1);
                   else if (swipe > swipeConfidenceThreshold) paginate(-1);
                 }}
-                className="absolute w-[100%] md:w-[75%] lg:w-[65%] aspect-video rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing border border-white/20"
+                className="absolute w-[100%] md:w-[75%] lg:w-[65%] aspect-video rounded-2xl md:rounded-3xl overflow-hidden cursor-grab active:cursor-grabbing border border-white/20"
                 style={{
                   transformStyle: 'preserve-3d',
                 }}
@@ -145,43 +146,35 @@ export const Hero = () => {
                   {banner.image && (
                     <img 
                       src={banner.image} 
-                      alt={banner.title} 
+                      alt="The Burl & Jade Collection" 
                       className="w-full h-full object-cover pointer-events-none"
                       draggable="false"
                     />
                   )}
                 </div>
                 {/* Cinematic overlay for depth */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none z-10" />
+                
                 
                 {/* Text for center slide */}
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: offset === 0 ? 1 : 0, y: offset === 0 ? 0 : 10 }}
                   transition={{ duration: 0.6, delay: offset === 0 ? 0.3 : 0 }}
-                  className="absolute bottom-6 md:bottom-12 left-6 md:left-12 flex flex-col items-start z-30 pointer-events-none"
+                  className="absolute top-8 md:top-12 left-1/2 -translate-x-1/2 flex flex-col items-center text-center z-30 pointer-events-none w-full px-4"
                 >
-                   <h2 className="text-white font-display text-3xl md:text-5xl tracking-wide mb-1 md:mb-2 drop-shadow-md">
-                     {banner.title}
+                   <h2 className="text-[#D4AF37] font-display text-3xl md:text-5xl tracking-wide mb-1 md:mb-2">
+                     The Burl & Jade Collection                     <span className="block text-sm md:text-base tracking-[0.1em] text-[#D4AF37] mt-2 font-light">Exquisite deep tones and curated natural burls</span>
                    </h2>
-                   <div className="h-0.5 w-12 bg-[#FFD700] mt-2 mb-4 md:mb-6 shadow-[0_0_8px_rgba(255,215,0,0.6)]"></div>
+                   <div className="h-0.5 w-12 bg-[#FFD700] mt-2 mb-4 md:mb-6 "></div>
                    
-                   <button 
-                     onClick={(e) => {
-                       e.stopPropagation();
-                       setCurrentView('catalog');
-                     }}
-                     className="bg-[#FFD700] border-2 border-[#FFD700] text-black px-6 py-2.5 md:px-8 md:py-3 text-xs md:text-sm font-bold uppercase tracking-widest hover:bg-white hover:border-white transition-colors pointer-events-auto shadow-lg"
-                   >
-                     Shop Special Offer
-                   </button>
+                   
                 </motion.div>
               </motion.div>
             );
           })}
           
           {/* Slider Pagination Controls */}
-          <div className="absolute -bottom-10 md:-bottom-12 left-1/2 -translate-x-1/2 flex gap-3 z-30 pointer-events-auto">
+          <div className="absolute -bottom-4 md:-bottom-6 left-1/2 -translate-x-1/2 flex gap-3 z-30 pointer-events-auto">
             {banners.map((_, idx) => (
               <button 
                 key={idx}
@@ -204,25 +197,7 @@ export const Hero = () => {
         </div>
       </div>
 
-      <div className="relative z-10 text-center px-4 md:px-6 max-w-4xl mx-auto flex flex-col items-center mt-8 md:mt-16">
-        <motion.div
-           initial={{ opacity: 0, y: 15 }}
-           animate={{ opacity: 1, y: 0 }}
-           transition={{ duration: 0.8, delay: 0.1 }}
-           className="flex flex-col items-center"
-        >
-          {introFinished && (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.1 }}
-              className="text-gray-500 text-sm md:text-base uppercase tracking-[0.2em] font-medium mt-2"
-            >
-              Select a category
-            </motion.p>
-          )}
-        </motion.div>
-      </div>
+      
     </section>
   );
 };

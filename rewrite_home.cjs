@@ -1,17 +1,16 @@
-import React from 'react';
+const fs = require('fs');
+
+let content = `import React from 'react';
 import { Hero } from '../components/Hero';
 import { CategorySelector } from '../components/CategorySelector';
 import { ProductCard } from '../components/ProductCard';
 import { useAppContext } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { EditableWrapper } from '../components/VisualEditor/EditableWrapper';
-import { DynamicRenderer } from '../builder/DynamicRenderer';
-import { useBuilder } from '../builder/BuilderContext';
 
 export const HomeView = () => {
   const { products, homeSections, logoConfig, layoutConfig, setLayoutConfig } = useAppContext();
   const navigate = useNavigate();
-  const { isEditMode } = useBuilder();
 
   const handleMoveSection = (index: number, direction: 'up' | 'down') => {
     const newOrder = [...layoutConfig.sectionOrder];
@@ -98,6 +97,7 @@ export const HomeView = () => {
           </EditableWrapper>
         );
       default:
+        // Render dynamic sections from homeSections
         const hSection = homeSections.find(s => s.filter === sectionId || s.title === sectionId);
         if (!hSection) return null;
         
@@ -109,27 +109,27 @@ export const HomeView = () => {
         
         return (
           <EditableWrapper 
-            key={sectionId} id={`section-${sectionId}`} type="section"
+            key={sectionId} id={\`section-\${sectionId}\`} type="section"
             onMoveUp={() => handleMoveSection(index, 'up')}
             onMoveDown={() => handleMoveSection(index, 'down')}
           >
-            <div className="max-w-7xl mx-auto px-4 md:px-6 pb-0 pt-0 flex flex-col overflow-hidden">
+            <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12 flex flex-col gap-12 md:gap-16 overflow-hidden">
               <div>
-                <div className={`flex items-end justify-between mb-4 md:mb-6 ${sectionId !== "newArrivals" ? "mt-2 md:mt-4" : ""}`}>
+                <div className="flex items-end justify-between mb-6 md:mb-8">
                   <h2 className="font-display text-2xl md:text-3xl text-archora-black">{hSection.title}</h2>
                   <button className="text-archora-black border-b border-archora-black pb-0.5 hover:text-archora-gold hover:border-archora-gold transition-colors uppercase tracking-wider text-[10px] md:text-xs font-medium">
                     View All
                   </button>
                 </div>
-                <div className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-3 md:gap-4 pb-1 md:pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-3 md:gap-4 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {sectionProducts.map((product, idx) => (
                     <div 
-                      key={`${product.id}-${idx}`} 
-                      className="shrink-0 snap-start w-[calc(100%/2.5)] sm:w-[calc(100%/3.2)] lg:w-[calc(100%/4.2)]"
+                      key={\`\${product.id}-\${idx}\`} 
+                      className="shrink-0 snap-start w-[calc(100%/2.2)] sm:w-[calc(100%/3.2)] lg:w-[calc(100%/4.2)]"
                     >
                       <ProductCard 
                         product={product} 
-                        onClick={() => navigate(`/product/${product.id}`)} 
+                        onClick={() => navigate(\`/product/\${product.id}\`)} 
                       />
                     </div>
                   ))}
@@ -141,8 +141,11 @@ export const HomeView = () => {
     }
   };
 
+  // If sectionOrder is missing some sections, we ensure they are added to the layout.
+  // Map homeSections to 'filter' as the ID if not present.
   const activeSectionOrder = [...(layoutConfig.sectionOrder || ['hero', 'categories', 'featured', 'newArrivals', 'footer'])];
   
+  // Make sure new sections are included if we just added them via admin panel
   homeSections.forEach(s => {
     if (!activeSectionOrder.includes(s.title) && !activeSectionOrder.includes(s.filter)) {
       activeSectionOrder.splice(activeSectionOrder.length - 1, 0, s.filter || s.title);
@@ -151,7 +154,9 @@ export const HomeView = () => {
 
   return (
     <div className="w-full">
-      {isEditMode ? <DynamicRenderer /> : activeSectionOrder.map((sectionId, index) => renderSection(sectionId, index))}
+      {activeSectionOrder.map((sectionId, index) => renderSection(sectionId, index))}
     </div>
   );
 };
+`
+fs.writeFileSync('src/views/HomeView.tsx', content);

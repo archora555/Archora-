@@ -1,3 +1,6 @@
+import { BuilderProvider } from './builder/BuilderContext';
+import { BuilderToolbar } from './builder/Toolbar';
+import { BuilderPalette } from './builder/Palette';
 import React, { useState, useEffect } from 'react';
 import { AppProvider, useAppContext } from './context/AppContext';
 import { Navbar } from './components/Navbar';
@@ -19,7 +22,7 @@ import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 
 // Router component to switch views
 const AppRouter = ({ showIntro }: { showIntro: boolean }) => {
-  const { currentView } = useAppContext();
+  const { currentView, isVisualEditMode, setIsVisualEditMode } = useAppContext();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -31,6 +34,17 @@ const AppRouter = ({ showIntro }: { showIntro: boolean }) => {
 
   return (
     <div className={`min-h-screen bg-white ${showIntro && isMainSite ? 'h-screen overflow-hidden' : ''}`}>
+      {isVisualEditMode && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-archora-black text-white px-6 py-3 rounded-full shadow-2xl z-[9999] flex items-center gap-4">
+          <span className="text-sm font-medium tracking-wide">Visual Edit Mode Active</span>
+          <button 
+            onClick={() => setIsVisualEditMode(false)}
+            className="bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+          >
+            Exit Mode
+          </button>
+        </div>
+      )}
       {isMainSite && <Navbar />}
       <main>
         <Routes>
@@ -53,6 +67,8 @@ const AppRouter = ({ showIntro }: { showIntro: boolean }) => {
         </Routes>
       </main>
       {isMainSite && <WhatsAppButton />}
+      <BuilderToolbar />
+      <BuilderPalette />
     </div>
   );
 };
@@ -77,10 +93,10 @@ function App() {
 
 const AppRoot = () => {
   return (
-    <AppProvider>
+    <AppProvider><BuilderProvider>
       <App />
       <AppRouterWrapper />
-    </AppProvider>
+    </BuilderProvider></AppProvider>
   )
 }
 

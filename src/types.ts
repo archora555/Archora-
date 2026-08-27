@@ -88,6 +88,9 @@ export interface LayoutConfig {
     width: number;
     mobileHeight: number;
     desktopHeight: number;
+    align?: 'left' | 'center' | 'right';
+    offsetX?: number;
+    offsetY?: number;
   };
   categorySection: {
     title: string;
@@ -103,6 +106,25 @@ export interface LayoutConfig {
     cornerRadius: number;
     gap: number;
   };
+  heroSettings: {
+    title: string;
+    subtitle: string;
+    buttonText: string;
+    height: number;
+    bgColor: string;
+    textColor: string;
+    overlayOpacity: number;
+    buttonWidth?: number;
+    buttonHeight?: number;
+    buttonFontSize?: number;
+  };
+  footerSettings: {
+    bgColor: string;
+    textColor: string;
+    title: string;
+    description: string;
+  };
+  sectionOrder: string[];
 }
 
 export type ViewState = 'home' | 'shop' | 'cart' | 'wishlist' | 'checkout' | 'admin' | 'account' | 'tracking' | 'profile';

@@ -44,6 +44,8 @@ export interface AppContextType {
   setLayoutConfig: React.Dispatch<React.SetStateAction<import("../types").LayoutConfig>>;
   currentUser: any | null;
   setCurrentUser: (user: any | null) => void;
+  isVisualEditMode: boolean;
+  setIsVisualEditMode: (mode: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -51,6 +53,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentView, setCurrentView] = useState<ViewState>('home');
   const [appliedCoupon, setAppliedCoupon] = useState<import('../types').Coupon | null>(null);
+  const [isVisualEditMode, setIsVisualEditMode] = useState(false);
 
   const [currentUser, setCurrentUser] = useState<any | null>(() => {
     try {
@@ -108,7 +111,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Default values
   const defaultBanners = [
-    { id: 1, image: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&q=80&w=2000", title: "Living Room" },
+    { id: 1, image: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&q=80&w=2000", title: "The Burl & Jade Collection" },
     { id: 2, image: "https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&q=80&w=2000", title: "Bedroom Oasis" },
     { id: 3, image: "https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?auto=format&fit=crop&q=80&w=2000", title: "Minimalist Office" },
     { id: 4, image: "https://images.unsplash.com/photo-1617806118233-18e1c0945594?auto=format&fit=crop&q=80&w=2000", title: "Elegant Dining" },
@@ -166,7 +169,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       aspectRatio: '1/1',
       cornerRadius: 16,
       gap: 16
-    }
+    },
+    heroSettings: {
+      title: 'ELEVATE YOUR EVERYDAY',
+      subtitle: 'Discover the intersection of timeless design and modern comfort.',
+      buttonText: 'SHOP THE COLLECTION',
+      height: 90,
+      bgColor: '#E6E6E6',
+      textColor: '#FFFFFF',
+      overlayOpacity: 0.1
+    },
+    footerSettings: {
+      bgColor: '#111111',
+      textColor: '#FFFFFF',
+      title: 'ARCHORA',
+      description: 'Redefining modern luxury. Our pieces are crafted with precision, blending timeless elegance with contemporary design.'
+    },
+    sectionOrder: ['hero', 'categories', 'featured', 'newArrivals', 'footer']
   };
   const defaultMenu = [
     { id: 'm1', label: 'Cart', action: 'cart' },
@@ -211,6 +230,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           logoSettings: { ...defaultLayoutConfig.logoSettings, ...(parsed.logoSettings || {}) },
           categorySection: { ...defaultLayoutConfig.categorySection, ...(parsed.categorySection || {}) },
           categoryCards: { ...defaultLayoutConfig.categoryCards, ...(parsed.categoryCards || {}) },
+          heroSettings: { ...defaultLayoutConfig.heroSettings, ...(parsed.heroSettings || {}) },
+          footerSettings: { ...defaultLayoutConfig.footerSettings, ...(parsed.footerSettings || {}) },
+          sectionOrder: parsed.sectionOrder || defaultLayoutConfig.sectionOrder,
         };
       }
       return defaultLayoutConfig;
@@ -245,6 +267,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               logoSettings: { ...defaultLayoutConfig.logoSettings, ...(data.layoutConfig.logoSettings || {}) },
               categorySection: { ...defaultLayoutConfig.categorySection, ...(data.layoutConfig.categorySection || {}) },
               categoryCards: { ...defaultLayoutConfig.categoryCards, ...(data.layoutConfig.categoryCards || {}) },
+              heroSettings: { ...defaultLayoutConfig.heroSettings, ...(data.layoutConfig.heroSettings || {}) },
+              footerSettings: { ...defaultLayoutConfig.footerSettings, ...(data.layoutConfig.footerSettings || {}) },
+              sectionOrder: data.layoutConfig.sectionOrder || defaultLayoutConfig.sectionOrder,
             }));
           }
         }
@@ -378,7 +403,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       isAdminLoggedIn, setIsAdminLoggedIn,
       saveSettingsToFirebase,
       appliedCoupon, setAppliedCoupon,
-      currentUser, setCurrentUser
+      currentUser, setCurrentUser,
+      isVisualEditMode, setIsVisualEditMode
     }}>
       {children}
     </AppContext.Provider>

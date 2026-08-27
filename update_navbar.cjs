@@ -1,127 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Menu, Search, Heart, User, ChevronDown } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { useAppContext } from '../context/AppContext';
-import { EditableWrapper } from './VisualEditor/EditableWrapper';
-import { useNavigate } from 'react-router-dom';
+const fs = require('fs');
+let code = fs.readFileSync('src/components/Navbar.tsx', 'utf8');
 
-const menuItems = [
-  { id: 1, label: 'Shop', action: 'shop' },
-  { id: 2, label: 'Lookbook', action: 'shop' },
-  { id: 3, label: 'Journal', action: 'shop' },
-  { id: 4, label: 'Cart', action: 'cart' }
-];
-
-export const Navbar = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  
-  const { cart, wishlist, currentUser, setCurrentUser, layoutConfig, setLayoutConfig, setCurrentView } = useAppContext();
-  const navigate = useNavigate();
-  const cartItemsCount = cart.reduce((acc, item) => acc + item.quantity, 0);
-  
-  const profileRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
-        setIsProfileOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  const logoConfig = layoutConfig.logoSettings;
-
-  const LogoWrapper = () => (
-    <EditableWrapper 
-      id="logo" 
-      type="logo"
-      currentWidth={layoutConfig.logoSettings.width}
-      onResize={(w) => setLayoutConfig({...layoutConfig, logoSettings: {...layoutConfig.logoSettings, width: w}})}
-      isTextEditable={logoConfig.type === 'text' || !logoConfig.imageUrl}
-      onTextChange={(t) => setLayoutConfig({...layoutConfig, logoSettings: {...layoutConfig.logoSettings, text: t}})}
-      currentAlign={layoutConfig.logoSettings.align || 'right'}
-      onAlignChange={(a) => setLayoutConfig({...layoutConfig, logoSettings: {...layoutConfig.logoSettings, align: a}})}
-      currentOffsetX={layoutConfig.logoSettings.offsetX}
-      onOffsetXChange={(x) => setLayoutConfig({...layoutConfig, logoSettings: {...layoutConfig.logoSettings, offsetX: x}})}
-      currentOffsetY={layoutConfig.logoSettings.offsetY}
-      onOffsetYChange={(y) => setLayoutConfig({...layoutConfig, logoSettings: {...layoutConfig.logoSettings, offsetY: y}})}
-    >
-      {logoConfig.type === 'text' || !logoConfig.imageUrl ? (
-        <span className="font-display text-3xl md:text-4xl tracking-[0.1em] text-[#D4AF37]" style={{ textShadow: "0px 1px 1px rgba(0,0,0,0.1)" }}>{logoConfig.text || 'ARCHORA'}</span>
-      ) : (
-        <img 
-          src={logoConfig.imageUrl} 
-          alt={logoConfig.text || 'ARCHORA'} 
-          className="object-contain" style={{ 
-            width: `\${layoutConfig.logoSettings.width}px`, 
-            height: typeof window !== 'undefined' && window.innerWidth < 768 ? `\${layoutConfig.logoSettings.mobileHeight}px` : `\${layoutConfig.logoSettings.desktopHeight}px` 
-          }}
-        />
-      )}
-      {logoConfig.type === 'image' && logoConfig.imageUrl && (
-        <span className="hidden font-display text-3xl md:text-4xl tracking-[0.1em] text-[#D4AF37]">{logoConfig.text || 'ARCHORA'}</span>
-      )}
-    </EditableWrapper>
-  );
-
-  return (
-    <div className="fixed top-0 left-0 w-full z-50">
-      <AnimatePresence>
-        {layoutConfig.announcementBar.show && (
-          <motion.div 
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-          >
-            <EditableWrapper 
-              id="announcement-bar" 
-              type="announcement"
-              isTextEditable
-              onTextChange={(t) => setLayoutConfig({...layoutConfig, announcementBar: {...layoutConfig.announcementBar, text: t}})}
-              onColorChange={(c) => setLayoutConfig({...layoutConfig, announcementBar: {...layoutConfig.announcementBar, bgColor: c}})}
-              onHide={() => setLayoutConfig({...layoutConfig, announcementBar: {...layoutConfig.announcementBar, show: false}})}
-              currentFontSize={layoutConfig.announcementBar.fontSize}
-              onFontSizeChange={(f) => setLayoutConfig({...layoutConfig, announcementBar: {...layoutConfig.announcementBar, fontSize: f}})}
-            >
-              <div 
-                className="w-full flex items-center justify-center text-center tracking-widest font-medium uppercase"
-                style={{
-                  backgroundColor: layoutConfig.announcementBar.bgColor || '#000000',
-                  color: layoutConfig.announcementBar.textColor || '#ffffff',
-                  fontSize: `\${layoutConfig.announcementBar.fontSize}px`,
-                  minHeight: `\${layoutConfig.announcementBar.height}px`,
-                  padding: `\${layoutConfig.announcementBar.padding}px`,
-                }}
-              >
-                {layoutConfig.announcementBar.text}
-              </div>
-            </EditableWrapper>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <header 
-        className={`w-full transition-all duration-300 \${isScrolled ? 'bg-white/90 backdrop-blur-md py-4 shadow-sm' : 'bg-transparent py-6'}`}
-        style={isScrolled ? { backgroundColor: layoutConfig.header?.bgColor || '#ffffff' } : {}}
-      >
-        
+const newGrid = `
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-3 items-center">
         
         {/* Left Side: Hamburger Menu */}
@@ -141,7 +21,7 @@ export const Navbar = () => {
                   {menuItems.map(item => (
                     <button key={item.id} onClick={() => { navigate('/'); setCurrentView(item.action as any); setIsMenuOpen(false); }} className="px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-3">
                       <span>{item.label}</span>
-                      {item.action === 'cart' && cartItemsCount > 0 && ` (${cartItemsCount})`}
+                      {item.action === 'cart' && cartItemsCount > 0 && \` (\${cartItemsCount})\`}
                     </button>
                   ))}
                 </motion.div>
@@ -155,7 +35,7 @@ export const Navbar = () => {
           <div 
             className="cursor-pointer flex items-center justify-center"
             onClick={() => { navigate('/'); setCurrentView('home'); }}
-            style={{ transform: `translate(${layoutConfig.logoSettings.offsetX || 0}px, ${layoutConfig.logoSettings.offsetY || 0}px)` }}
+            style={{ transform: \`translate(\${layoutConfig.logoSettings.offsetX || 0}px, \${layoutConfig.logoSettings.offsetY || 0}px)\` }}
           >
             <LogoWrapper />
           </div>
@@ -247,7 +127,19 @@ export const Navbar = () => {
           </div>
         </div>
       </div>
-    </header>
-    </div>
-  );
-};
+    </header>`;
+
+code = code.replace(/<div className="max-w-7xl mx-auto px-6 grid grid-cols-3 items-center">([\s\S]*?)<\/header>/, newGrid);
+
+// Update Logo font styling inside LogoWrapper if possible, or just add a quick style tweak.
+code = code.replace(
+  'className="font-display tracking-[0.2em]"',
+  'className="font-display tracking-[0.1em] text-[rgb(161,133,52)]"'
+);
+code = code.replace(
+  'style={{ fontSize: `${layoutConfig.logoSettings.fontSize}px` }}',
+  'style={{ fontSize: `${layoutConfig.logoSettings.fontSize}px`, textShadow: "0px 1px 1px rgba(0,0,0,0.1)" }}'
+);
+
+fs.writeFileSync('src/components/Navbar.tsx', code);
+console.log('Navbar updated');
