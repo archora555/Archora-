@@ -21,24 +21,24 @@ export const BuilderToolbar = () => {
   if (!node) return null;
 
   return (
-    <div className="fixed top-20 right-4 w-80 bg-white shadow-2xl rounded-xl border border-gray-200 z-[99999] overflow-hidden flex flex-col max-h-[80vh]">
-      <div className="flex items-center justify-between p-3 border-b bg-gray-50">
-        <span className="font-semibold text-sm text-gray-700">Editing: {node.type}</span>
+    <div className="fixed top-20 right-4 w-80 frosted-glass-white-card shadow-2xl rounded-2xl border border-white/20 z-[99999] overflow-hidden flex flex-col max-h-[80vh] text-white">
+      <div className="flex items-center justify-between p-3 border-b border-white/10 bg-white/5">
+        <span className="font-semibold text-sm text-archora-gold">Editing: {node.type}</span>
         <div className="flex items-center gap-1">
-          <button onClick={() => moveNode(node.id, 'up')} className="p-1 hover:bg-gray-200 rounded" title="Move Up">↑</button>
-          <button onClick={() => moveNode(node.id, 'down')} className="p-1 hover:bg-gray-200 rounded" title="Move Down">↓</button>
-          <button onClick={() => removeNode(node.id)} className="p-1 text-red-500 hover:bg-red-50 rounded" title="Delete"><Trash className="w-4 h-4" /></button>
-          <button onClick={() => setSelectedId(null)} className="p-1 hover:bg-gray-200 rounded"><X className="w-4 h-4" /></button>
+          <button onClick={() => moveNode(node.id, 'up')} className="p-1 hover:bg-white/10 text-gray-300 hover:text-white rounded cursor-pointer" title="Move Up">↑</button>
+          <button onClick={() => moveNode(node.id, 'down')} className="p-1 hover:bg-white/10 text-gray-300 hover:text-white rounded cursor-pointer" title="Move Down">↓</button>
+          <button onClick={() => removeNode(node.id)} className="p-1 text-red-400 hover:bg-red-500/20 rounded cursor-pointer" title="Delete"><Trash className="w-4 h-4" /></button>
+          <button onClick={() => setSelectedId(null)} className="p-1 hover:bg-white/10 text-gray-400 hover:text-white rounded cursor-pointer"><X className="w-4 h-4" /></button>
         </div>
       </div>
       
-      <div className="flex border-b text-sm">
+      <div className="flex border-b border-white/10 text-sm">
         <button 
-          className={`flex-1 py-2 font-medium flex items-center justify-center gap-2 ${activeTab === 'style' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
+          className={`flex-1 py-2.5 font-medium flex items-center justify-center gap-2 cursor-pointer transition-colors ${activeTab === 'style' ? 'text-archora-gold border-b-2 border-archora-gold bg-white/5' : 'text-gray-400 hover:text-white'}`}
           onClick={() => setActiveTab('style')}
         ><Settings className="w-4 h-4"/> Style</button>
         <button 
-          className={`flex-1 py-2 font-medium flex items-center justify-center gap-2 ${activeTab === 'content' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
+          className={`flex-1 py-2.5 font-medium flex items-center justify-center gap-2 cursor-pointer transition-colors ${activeTab === 'content' ? 'text-archora-gold border-b-2 border-archora-gold bg-white/5' : 'text-gray-400 hover:text-white'}`}
           onClick={() => setActiveTab('content')}
         ><Type className="w-4 h-4"/> Content</button>
       </div>
@@ -47,24 +47,24 @@ export const BuilderToolbar = () => {
         {activeTab === 'style' && (
           <>
             <div>
-              <label className="text-xs font-semibold text-gray-500">Margin</label>
-              <input type="range" min="0" max="100" value={parseInt(node.styles.margin || '0')} onChange={e => updateNode(node.id, { styles: { ...node.styles, margin: `${e.target.value}px` }})} className="w-full" />
+              <label className="text-xs font-semibold text-gray-300">Margin</label>
+              <input type="range" min="0" max="100" value={parseInt(node.styles.margin || '0')} onChange={e => updateNode(node.id, { styles: { ...node.styles, margin: `${e.target.value}px` }})} className="w-full accent-archora-gold" />
             </div>
             <div>
-              <label className="text-xs font-semibold text-gray-500">Padding</label>
-              <input type="range" min="0" max="100" value={parseInt(node.styles.padding || '0')} onChange={e => updateNode(node.id, { styles: { ...node.styles, padding: `${e.target.value}px` }})} className="w-full" />
+              <label className="text-xs font-semibold text-gray-300">Padding</label>
+              <input type="range" min="0" max="100" value={parseInt(node.styles.padding || '0')} onChange={e => updateNode(node.id, { styles: { ...node.styles, padding: `${e.target.value}px` }})} className="w-full accent-archora-gold" />
             </div>
             <div>
-              <label className="text-xs font-semibold text-gray-500">Corner Radius</label>
-              <input type="range" min="0" max="50" value={parseInt(node.styles.borderRadius || '0')} onChange={e => updateNode(node.id, { styles: { ...node.styles, borderRadius: `${e.target.value}px` }})} className="w-full" />
+              <label className="text-xs font-semibold text-gray-300">Corner Radius</label>
+              <input type="range" min="0" max="50" value={parseInt(node.styles.borderRadius || '0')} onChange={e => updateNode(node.id, { styles: { ...node.styles, borderRadius: `${e.target.value}px` }})} className="w-full accent-archora-gold" />
             </div>
             <div>
-              <label className="text-xs font-semibold text-gray-500">Background Color</label>
-              <input type="color" value={node.styles.backgroundColor || '#ffffff'} onChange={e => updateNode(node.id, { styles: { ...node.styles, backgroundColor: e.target.value }})} className="w-full h-8 cursor-pointer" />
+              <label className="text-xs font-semibold text-gray-300">Background Color</label>
+              <input type="color" value={node.styles.backgroundColor || '#ffffff'} onChange={e => updateNode(node.id, { styles: { ...node.styles, backgroundColor: e.target.value }})} className="w-full h-8 cursor-pointer rounded frosted-glass-white-input border border-white/20" />
             </div>
             <div>
-              <label className="text-xs font-semibold text-gray-500">Text Color</label>
-              <input type="color" value={node.styles.color || '#000000'} onChange={e => updateNode(node.id, { styles: { ...node.styles, color: e.target.value }})} className="w-full h-8 cursor-pointer" />
+              <label className="text-xs font-semibold text-gray-300">Text Color</label>
+              <input type="color" value={node.styles.color || '#000000'} onChange={e => updateNode(node.id, { styles: { ...node.styles, color: e.target.value }})} className="w-full h-8 cursor-pointer rounded frosted-glass-white-input border border-white/20" />
             </div>
           </>
         )}
@@ -73,12 +73,12 @@ export const BuilderToolbar = () => {
           <div className="flex flex-col gap-3">
             {Object.keys(node.props).map(key => (
               <div key={key}>
-                <label className="text-xs font-semibold text-gray-500 uppercase">{key}</label>
+                <label className="text-xs font-semibold text-gray-300 uppercase">{key}</label>
                 <input 
                   type="text" 
                   value={node.props[key]} 
                   onChange={e => updateNode(node.id, { props: { ...node.props, [key]: e.target.value }})}
-                  className="w-full border rounded px-2 py-1 mt-1 text-sm"
+                  className="w-full border border-white/20 frosted-glass-white-input text-white rounded px-2.5 py-1.5 mt-1 text-sm outline-none focus:border-archora-gold"
                 />
               </div>
             ))}

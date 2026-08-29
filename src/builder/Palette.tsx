@@ -24,30 +24,30 @@ export const BuilderPalette = () => {
   };
 
   return (
-    <div className="fixed top-20 left-4 w-64 bg-white shadow-2xl rounded-xl border border-gray-200 z-[99999] flex flex-col max-h-[80vh] overflow-hidden">
-      <div className="p-3 border-b bg-gray-50 font-semibold text-sm text-gray-700 flex items-center gap-2">
+    <div className="fixed top-20 left-4 w-64 bg-[#0e0e0e]/95 shadow-[0_20px_50px_rgba(0,0,0,0.6)] rounded-2xl border border-white/20 z-[99999] flex flex-col max-h-[80vh] overflow-hidden text-white">
+      <div className="p-3 border-b border-white/10 bg-white/5 font-semibold text-sm text-archora-gold flex items-center gap-2">
         <PlusSquare className="w-4 h-4" /> Add Component
       </div>
       <div className="p-3 overflow-y-auto grid grid-cols-2 gap-2">
-        <button onClick={() => addComponent('Header')} className="flex flex-col items-center gap-1 p-3 border rounded hover:bg-gray-50">
-          <Layout className="w-6 h-6 text-gray-500" />
-          <span className="text-xs font-medium">Header</span>
+        <button onClick={() => addComponent('Header')} className="flex flex-col items-center gap-1.5 p-3 border border-white/15 rounded-xl hover:bg-white/10 transition-colors cursor-pointer">
+          <Layout className="w-6 h-6 text-archora-gold" />
+          <span className="text-xs font-medium text-gray-200">Header</span>
         </button>
-        <button onClick={() => addComponent('Hero', { title: 'New Hero', subtitle: 'Subtitle text' })} className="flex flex-col items-center gap-1 p-3 border rounded hover:bg-gray-50">
-          <Image className="w-6 h-6 text-gray-500" />
-          <span className="text-xs font-medium">Hero</span>
+        <button onClick={() => addComponent('Hero', { title: 'New Hero', subtitle: 'Subtitle text' })} className="flex flex-col items-center gap-1.5 p-3 border border-white/15 rounded-xl hover:bg-white/10 transition-colors cursor-pointer">
+          <Image className="w-6 h-6 text-archora-gold" />
+          <span className="text-xs font-medium text-gray-200">Hero</span>
         </button>
-        <button onClick={() => addComponent('Section')} className="flex flex-col items-center gap-1 p-3 border rounded hover:bg-gray-50">
-          <Layout className="w-6 h-6 text-gray-500" />
-          <span className="text-xs font-medium">Section</span>
+        <button onClick={() => addComponent('Section')} className="flex flex-col items-center gap-1.5 p-3 border border-white/15 rounded-xl hover:bg-white/10 transition-colors cursor-pointer">
+          <Layout className="w-6 h-6 text-archora-gold" />
+          <span className="text-xs font-medium text-gray-200">Section</span>
         </button>
-        <button onClick={() => addComponent('Text', { content: 'Enter your text here' })} className="flex flex-col items-center gap-1 p-3 border rounded hover:bg-gray-50">
-          <Type className="w-6 h-6 text-gray-500" />
-          <span className="text-xs font-medium">Text</span>
+        <button onClick={() => addComponent('Text', { content: 'Enter your text here' })} className="flex flex-col items-center gap-1.5 p-3 border border-white/15 rounded-xl hover:bg-white/10 transition-colors cursor-pointer">
+          <Type className="w-6 h-6 text-archora-gold" />
+          <span className="text-xs font-medium text-gray-200">Text</span>
         </button>
-        <button onClick={() => addComponent('Button', { text: 'Click Me' }, { backgroundColor: '#2563eb', color: '#fff', padding: '10px 20px', borderRadius: '4px' })} className="flex flex-col items-center gap-1 p-3 border rounded hover:bg-gray-50">
-          <div className="w-8 h-4 bg-blue-600 rounded"></div>
-          <span className="text-xs font-medium">Button</span>
+        <button onClick={() => addComponent('Button', { text: 'Click Me' }, { backgroundColor: '#C5A880', color: '#000', padding: '10px 20px', borderRadius: '8px' })} className="flex flex-col items-center gap-1.5 p-3 border border-white/15 rounded-xl hover:bg-white/10 transition-colors cursor-pointer">
+          <div className="w-8 h-4 bg-archora-gold rounded"></div>
+          <span className="text-xs font-medium text-gray-200">Button</span>
         </button>
       </div>
     </div>

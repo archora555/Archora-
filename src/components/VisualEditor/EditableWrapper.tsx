@@ -144,69 +144,69 @@ export const EditableWrapper: React.FC<EditableWrapperProps> = ({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="fixed top-4 left-1/2 -translate-x-1/2 bg-white shadow-2xl rounded-lg flex items-center p-1.5 z-[99999] border border-gray-100 whitespace-nowrap" style={{ boxShadow: '0 10px 40px -10px rgba(0,0,0,0.2)' }}
+            className="fixed top-4 left-1/2 -translate-x-1/2 frosted-glass-white-card rounded-xl flex items-center p-1.5 z-[99999] border border-white/20 whitespace-nowrap shadow-2xl text-white"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-1">
               {onMoveUp && (
-                <button onClick={onMoveUp} className="p-2 hover:bg-gray-100 rounded-md text-gray-700 transition-colors" title="Move Up">
+                <button onClick={onMoveUp} className="p-2 hover:bg-white/10 rounded-lg text-gray-300 hover:text-white transition-colors cursor-pointer" title="Move Up">
                   <ArrowUp className="w-4 h-4" />
                 </button>
               )}
               {onMoveDown && (
-                <button onClick={onMoveDown} className="p-2 hover:bg-gray-100 rounded-md text-gray-700 transition-colors" title="Move Down">
+                <button onClick={onMoveDown} className="p-2 hover:bg-white/10 rounded-lg text-gray-300 hover:text-white transition-colors cursor-pointer" title="Move Down">
                   <ArrowDown className="w-4 h-4" />
                 </button>
               )}
               {onAlignChange && (
-                <div className="flex bg-gray-50 rounded-md border border-gray-100 p-0.5 ml-1 mr-1">
-                  <button onClick={() => onAlignChange('left')} className={`p-1.5 rounded-sm transition-colors ${currentAlign === 'left' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`} title="Align Left">
+                <div className="flex bg-white/10 rounded-lg border border-white/15 p-0.5 ml-1 mr-1">
+                  <button onClick={() => onAlignChange('left')} className={`p-1.5 rounded-md transition-colors cursor-pointer ${currentAlign === 'left' ? 'bg-archora-gold text-black font-bold shadow-sm' : 'text-gray-400 hover:text-white'}`} title="Align Left">
                     <AlignLeft className="w-4 h-4" />
                   </button>
-                  <button onClick={() => onAlignChange('center')} className={`p-1.5 rounded-sm transition-colors ${currentAlign === 'center' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`} title="Align Center">
+                  <button onClick={() => onAlignChange('center')} className={`p-1.5 rounded-md transition-colors cursor-pointer ${currentAlign === 'center' ? 'bg-archora-gold text-black font-bold shadow-sm' : 'text-gray-400 hover:text-white'}`} title="Align Center">
                     <AlignCenter className="w-4 h-4" />
                   </button>
-                  <button onClick={() => onAlignChange('right')} className={`p-1.5 rounded-sm transition-colors ${currentAlign === 'right' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`} title="Align Right">
+                  <button onClick={() => onAlignChange('right')} className={`p-1.5 rounded-md transition-colors cursor-pointer ${currentAlign === 'right' ? 'bg-archora-gold text-black font-bold shadow-sm' : 'text-gray-400 hover:text-white'}`} title="Align Right">
                     <AlignRight className="w-4 h-4" />
                   </button>
                 </div>
               )}
               {onAdd && (
-                <button onClick={onAdd} className="p-2 hover:bg-blue-50 text-blue-600 rounded-md transition-colors flex items-center gap-1" title="Add Item">
+                <button onClick={onAdd} className="p-2 hover:bg-archora-gold/20 text-archora-gold rounded-lg transition-colors flex items-center gap-1 cursor-pointer" title="Add Item">
                   <Plus className="w-4 h-4" />
                   <span className="text-xs pr-1 font-medium">Add</span>
                 </button>
               )}
               {onDelete && (
-                <button onClick={onDelete} className="p-2 hover:bg-red-50 text-red-600 rounded-md transition-colors" title="Delete">
+                <button onClick={onDelete} className="p-2 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors cursor-pointer" title="Delete">
                   <Trash2 className="w-4 h-4" />
                 </button>
               )}
               
               {onColorChange && (
-                <div className="relative p-2 hover:bg-gray-100 rounded-md text-gray-700 cursor-pointer overflow-hidden transition-colors" title="Change Color">
+                <div className="relative p-2 hover:bg-white/10 rounded-lg text-gray-300 hover:text-white cursor-pointer overflow-hidden transition-colors" title="Change Color">
                   <Palette className="w-4 h-4" />
                   <input type="color" className="absolute -top-4 -left-4 w-16 h-16 opacity-0 cursor-pointer" onChange={(e) => onColorChange(e.target.value)} />
                 </div>
               )}
               
               {hasSliders && (
-                <button onClick={() => setShowSliders(!showSliders)} className={`p-2 rounded-md transition-colors ${showSliders ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-100 text-gray-700'}`} title="Adjust Sizes">
+                <button onClick={() => setShowSliders(!showSliders)} className={`p-2 rounded-lg transition-colors cursor-pointer ${showSliders ? 'bg-archora-gold text-black' : 'hover:bg-white/10 text-gray-300 hover:text-white'}`} title="Adjust Sizes">
                   <Sliders className="w-4 h-4" />
                 </button>
               )}
 
               {onHide && (
-                <button onClick={onHide} className="p-2 hover:bg-red-50 text-red-600 rounded-md transition-colors" title="Toggle Visibility">
+                <button onClick={onHide} className="p-2 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors cursor-pointer" title="Toggle Visibility">
                   <EyeOff className="w-4 h-4" />
                 </button>
               )}
               
-              <div className="w-[1px] h-6 bg-gray-200 mx-1"></div>
+              <div className="w-[1px] h-6 bg-white/20 mx-1"></div>
               
-              <button onClick={handleSave} className="p-2 bg-green-50 hover:bg-green-100 rounded-md text-green-700 transition-colors font-medium flex items-center gap-1 px-3" title="Save Changes">
+              <button onClick={handleSave} className="p-2 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 rounded-lg text-emerald-400 transition-colors font-medium flex items-center gap-1 px-3 cursor-pointer" title="Save Changes">
                 <Check className="w-4 h-4" />
-                <span className="text-xs">Save</span>
+                <span className="text-xs font-bold">Save</span>
               </button>
             </div>
 
@@ -215,18 +215,18 @@ export const EditableWrapper: React.FC<EditableWrapperProps> = ({
               <motion.div 
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className="absolute top-full left-0 mt-2 bg-white shadow-xl rounded-lg border border-gray-100 p-4 min-w-[200px] flex flex-col gap-4"
+                className="absolute top-full left-0 mt-2 frosted-glass-white-card shadow-2xl rounded-xl border border-white/20 p-4 min-w-[220px] flex flex-col gap-4 text-white"
               >
                 {onResize && (
                   <div className="flex flex-col gap-1">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex justify-between">
+                    <label className="text-xs font-semibold text-gray-300 uppercase tracking-wider flex justify-between">
                       <span>Size</span>
                       <span>{Math.round(currentWidth || 0)}px</span>
                     </label>
                     <input 
                       type="range" min="20" max="800" value={currentWidth || 100}
                       onChange={(e) => onResize(Number(e.target.value), currentHeight || Number(e.target.value))}
-                      className="w-full accent-blue-600"
+                      className="w-full accent-archora-gold"
                     />
                   </div>
                 )}
@@ -239,46 +239,46 @@ export const EditableWrapper: React.FC<EditableWrapperProps> = ({
                     <input 
                       type="range" min="10" max="120" value={currentFontSize || 16}
                       onChange={(e) => onFontSizeChange(Number(e.target.value))}
-                      className="w-full accent-blue-600"
+                      className="w-full accent-archora-gold"
                     />
                   </div>
                 )}
                 {onMarginChange && (
                   <div className="flex flex-col gap-1">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex justify-between">
+                    <label className="text-xs font-semibold text-gray-300 uppercase tracking-wider flex justify-between">
                       <span>Spacing</span>
                       <span>{currentMargin || 0}px</span>
                     </label>
                     <input 
                       type="range" min="0" max="200" value={currentMargin || 0}
                       onChange={(e) => onMarginChange(Number(e.target.value))}
-                      className="w-full accent-blue-600"
+                      className="w-full accent-archora-gold"
                     />
                   </div>
                 )}
                 {onOffsetXChange && (
                   <div className="flex flex-col gap-1">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex justify-between">
+                    <label className="text-xs font-semibold text-gray-300 uppercase tracking-wider flex justify-between">
                       <span>X Offset</span>
                       <span>{currentOffsetX || 0}px</span>
                     </label>
                     <input 
                       type="range" min="-300" max="300" value={currentOffsetX || 0}
                       onChange={(e) => onOffsetXChange(Number(e.target.value))}
-                      className="w-full accent-blue-600"
+                      className="w-full accent-archora-gold"
                     />
                   </div>
                 )}
                 {onOffsetYChange && (
                   <div className="flex flex-col gap-1">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex justify-between">
+                    <label className="text-xs font-semibold text-gray-300 uppercase tracking-wider flex justify-between">
                       <span>Y Offset</span>
                       <span>{currentOffsetY || 0}px</span>
                     </label>
                     <input 
                       type="range" min="-300" max="300" value={currentOffsetY || 0}
                       onChange={(e) => onOffsetYChange(Number(e.target.value))}
-                      className="w-full accent-blue-600"
+                      className="w-full accent-archora-gold"
                     />
                   </div>
                 )}

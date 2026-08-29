@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion } from 'motion/react';
+import { ArchoraLogo } from './ArchoraLogo';
 
 export const IntroSequence = ({ onComplete }: { onComplete: () => void }) => {
   useEffect(() => {
@@ -28,8 +29,20 @@ export const IntroSequence = ({ onComplete }: { onComplete: () => void }) => {
       initial={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 1, ease: 'easeInOut' }}
-      className="fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden bg-[#020203]"
+      onClick={handleEnter}
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden bg-[#020203] cursor-pointer"
     >
+      {/* Top Right Quick Skip Button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          handleEnter();
+        }}
+        className="absolute top-6 right-6 z-30 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-xs text-gray-300 hover:text-white tracking-wider uppercase transition-colors cursor-pointer"
+      >
+        Skip Intro ✕
+      </button>
+
       {/* Deep Space Background Layer */}
       <motion.div 
         initial={{ opacity: 0 }}
@@ -136,13 +149,11 @@ export const IntroSequence = ({ onComplete }: { onComplete: () => void }) => {
           {/* Subtle glowing separator */}
           <div className="w-[120%] h-[2px] bg-gradient-to-r from-transparent via-[#FFD700] to-transparent my-1 shadow-[0_0_12px_#FFD700] opacity-80" />
 
-          <div 
-            className="font-display text-[2.5rem] md:text-7xl text-[#FFFDF5] tracking-[0.1em] uppercase font-normal drop-shadow-2xl mt-1"
-            style={{ 
-              textShadow: '0 4px 15px rgba(0,0,0,0.8), 0 0 30px rgba(255,215,0,0.6)' 
-            }}
-          >
-            ARCHORA
+          <div className="mt-4 flex items-center justify-center">
+            <ArchoraLogo 
+              height={76} 
+              className="h-16 md:h-24 w-auto object-contain filter drop-shadow-[0_4px_25px_rgba(255,215,0,0.6)]" 
+            />
           </div>
         </motion.div>
 

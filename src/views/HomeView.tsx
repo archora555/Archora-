@@ -7,9 +7,10 @@ import { useNavigate } from 'react-router-dom';
 import { EditableWrapper } from '../components/VisualEditor/EditableWrapper';
 import { DynamicRenderer } from '../builder/DynamicRenderer';
 import { useBuilder } from '../builder/BuilderContext';
+import { ArchoraLogo } from '../components/ArchoraLogo';
 
 export const HomeView = () => {
-  const { products, homeSections, logoConfig, layoutConfig, setLayoutConfig } = useAppContext();
+  const { products, homeSections, logoConfig, layoutConfig, setLayoutConfig, setCurrentView } = useAppContext();
   const navigate = useNavigate();
   const { isEditMode } = useBuilder();
 
@@ -53,7 +54,10 @@ export const HomeView = () => {
             onMoveDown={() => handleMoveSection(index, 'down')}
             onColorChange={(c) => setLayoutConfig({...layoutConfig, footerSettings: {...layoutConfig.footerSettings, bgColor: c}})}
           >
-            <footer className="text-white py-20 px-6" style={{ backgroundColor: layoutConfig.footerSettings.bgColor || '#111111' }}>
+            <footer 
+              className="text-white py-16 md:py-20 px-6 frosted-glass-white-footer mt-12 relative z-10" 
+              style={layoutConfig.footerSettings.bgColor && layoutConfig.footerSettings.bgColor !== '#111111' ? { backgroundColor: layoutConfig.footerSettings.bgColor } : {}}
+            >
               <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
                 <div className="col-span-1 md:col-span-2">
                   <EditableWrapper 
@@ -61,9 +65,9 @@ export const HomeView = () => {
                     isTextEditable 
                     onTextChange={(t) => setLayoutConfig({...layoutConfig, footerSettings: {...layoutConfig.footerSettings, title: t}})}
                   >
-                    <h3 className="font-display text-4xl mb-6" style={{ color: layoutConfig.footerSettings.textColor || '#ffffff' }}>
-                      {layoutConfig.footerSettings.title}
-                    </h3>
+                    <div className="mb-6 flex items-center">
+                      <ArchoraLogo height={42} className="h-10 md:h-12 w-auto object-contain cursor-pointer" />
+                    </div>
                   </EditableWrapper>
                   
                   <EditableWrapper 
@@ -113,19 +117,25 @@ export const HomeView = () => {
             onMoveUp={() => handleMoveSection(index, 'up')}
             onMoveDown={() => handleMoveSection(index, 'down')}
           >
-            <div className="max-w-7xl mx-auto px-4 md:px-6 pb-0 pt-0 flex flex-col overflow-hidden">
-              <div>
-                <div className={`flex items-end justify-between mb-4 md:mb-6 ${sectionId !== "newArrivals" ? "mt-2 md:mt-4" : ""}`}>
-                  <h2 className="font-display text-2xl md:text-3xl text-archora-black">{hSection.title}</h2>
-                  <button className="text-archora-black border-b border-archora-black pb-0.5 hover:text-archora-gold hover:border-archora-gold transition-colors uppercase tracking-wider text-[10px] md:text-xs font-medium">
+            <div className="max-w-7xl mx-auto px-4 md:px-6 my-6 md:my-8">
+              <div className="p-1 sm:p-2">
+                <div className={`flex items-end justify-between mb-4 md:mb-6 ${sectionId !== "newArrivals" ? "mt-1 md:mt-2" : ""}`}>
+                  <h2 className="font-display text-2xl md:text-3xl text-white flex items-center gap-2.5">
+                    <span className="w-2 h-2 rounded-full bg-archora-gold shadow-[0_0_10px_rgba(212,175,55,0.8)] inline-block"></span>
+                    {hSection.title}
+                  </h2>
+                  <button 
+                    onClick={() => { navigate('/'); setCurrentView('shop'); }}
+                    className="text-white/80 border-b border-white/30 pb-0.5 hover:text-archora-gold hover:border-archora-gold transition-colors uppercase tracking-wider text-[10px] md:text-xs font-medium"
+                  >
                     View All
                   </button>
                 </div>
-                <div className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-3 md:gap-4 pb-1 md:pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-4 md:gap-6 pb-8 pt-3 px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {sectionProducts.map((product, idx) => (
                     <div 
                       key={`${product.id}-${idx}`} 
-                      className="shrink-0 snap-start w-[calc(100%/2.5)] sm:w-[calc(100%/3.2)] lg:w-[calc(100%/4.2)]"
+                      className="shrink-0 snap-start w-[calc(100%/2.2)] sm:w-[calc(100%/3.2)] lg:w-[calc(100%/4.2)]"
                     >
                       <ProductCard 
                         product={product} 

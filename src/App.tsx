@@ -19,6 +19,7 @@ import { IntroSequence } from './components/IntroSequence';
 import { WhatsAppButton } from './components/WhatsAppButton';
 import { AnimatePresence } from 'motion/react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { SilkShaderBackground } from './components/SilkShaderBackground';
 
 // Router component to switch views
 const AppRouter = ({ showIntro }: { showIntro: boolean }) => {
@@ -33,42 +34,48 @@ const AppRouter = ({ showIntro }: { showIntro: boolean }) => {
   const isMainSite = !location.pathname.startsWith('/admin') && !location.pathname.startsWith('/login');
 
   return (
-    <div className={`min-h-screen bg-white ${showIntro && isMainSite ? 'h-screen overflow-hidden' : ''}`}>
-      {isVisualEditMode && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-archora-black text-white px-6 py-3 rounded-full shadow-2xl z-[9999] flex items-center gap-4">
-          <span className="text-sm font-medium tracking-wide">Visual Edit Mode Active</span>
-          <button 
-            onClick={() => setIsVisualEditMode(false)}
-            className="bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
-          >
-            Exit Mode
-          </button>
-        </div>
-      )}
-      {isMainSite && <Navbar />}
-      <main>
-        <Routes>
-          <Route path="/login" element={<AdminLoginView />} />
-          <Route path="/archora-admin-portal" element={<AdminLoginView />} />
-          <Route path="/admin/*" element={<AdminView />} />
-          <Route path="/product/:id" element={<ProductView />} />
-          <Route path="/category/:id" element={<CategoryView />} />
-          <Route path="*" element={
-            <>
-              {currentView === 'home' && <HomeView />}
-              {currentView === 'shop' && <ShopView />}
-              {currentView === 'cart' && <CartView />}
-              {currentView === 'wishlist' && <WishlistView />}
-              {currentView === 'checkout' && <CheckoutView />}
-              {currentView === 'tracking' && <OrderTrackingView />}
-              {currentView === 'profile' && <ProfileView />}
-            </>
-          } />
-        </Routes>
-      </main>
-      {isMainSite && <WhatsAppButton />}
-      <BuilderToolbar />
-      <BuilderPalette />
+    <div className={`min-h-screen relative bg-[#070707] text-white selection:bg-archora-gold/30 selection:text-white ${showIntro && isMainSite ? 'h-screen overflow-hidden' : ''}`}>
+      {/* High-Performance WebGL/Three.js Liquid Wave Shader Background */}
+      <SilkShaderBackground />
+
+      {/* Relative Foreground App Content Layer */}
+      <div className="relative z-10 flex flex-col min-h-screen">
+        {isVisualEditMode && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 frosted-glass-white-header text-white px-6 py-3 rounded-full shadow-2xl z-[9999] flex items-center gap-4">
+            <span className="text-sm font-medium tracking-wide">Visual Edit Mode Active</span>
+            <button 
+              onClick={() => setIsVisualEditMode(false)}
+              className="bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer"
+            >
+              Exit Mode
+            </button>
+          </div>
+        )}
+        {isMainSite && <Navbar />}
+        <main className="flex-1">
+          <Routes>
+            <Route path="/login" element={<AdminLoginView />} />
+            <Route path="/archora-admin-portal" element={<AdminLoginView />} />
+            <Route path="/admin/*" element={<AdminView />} />
+            <Route path="/product/:id" element={<ProductView />} />
+            <Route path="/category/:id" element={<CategoryView />} />
+            <Route path="*" element={
+              <>
+                {currentView === 'home' && <HomeView />}
+                {currentView === 'shop' && <ShopView />}
+                {currentView === 'cart' && <CartView />}
+                {currentView === 'wishlist' && <WishlistView />}
+                {currentView === 'checkout' && <CheckoutView />}
+                {currentView === 'tracking' && <OrderTrackingView />}
+                {currentView === 'profile' && <ProfileView />}
+              </>
+            } />
+          </Routes>
+        </main>
+        {isMainSite && <WhatsAppButton />}
+        <BuilderToolbar />
+        <BuilderPalette />
+      </div>
     </div>
   );
 };

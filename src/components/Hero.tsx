@@ -89,9 +89,9 @@ export const Hero = () => {
   };
 
   return (
-    <section className="relative w-full flex flex-col justify-center overflow-hidden bg-white pt-24 pb-4 md:pb-6">
+    <section className="relative w-full flex flex-col justify-center overflow-hidden bg-transparent pt-24 pb-4 md:pb-6">
       {/* Horizontal Banner */}
-      <div className="absolute top-[72px] md:top-24 left-0 w-full bg-archora-black text-white py-2.5 flex items-center justify-center overflow-hidden z-20">
+      <div className="absolute top-[72px] md:top-24 left-0 w-full frosted-glass-white-subtle border-y border-white/20 text-white py-2.5 flex items-center justify-center overflow-hidden z-20">
         <motion.div
            initial={{ opacity: 0 }}
            animate={{ opacity: 1 }}
@@ -146,29 +146,12 @@ export const Hero = () => {
                   {banner.image && (
                     <img 
                       src={banner.image} 
-                      alt="The Burl & Jade Collection" 
+                      alt={banner.title || "Banner"} 
                       className="w-full h-full object-cover pointer-events-none"
                       draggable="false"
                     />
                   )}
                 </div>
-                {/* Cinematic overlay for depth */}
-                
-                
-                {/* Text for center slide */}
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: offset === 0 ? 1 : 0, y: offset === 0 ? 0 : 10 }}
-                  transition={{ duration: 0.6, delay: offset === 0 ? 0.3 : 0 }}
-                  className="absolute top-8 md:top-12 left-1/2 -translate-x-1/2 flex flex-col items-center text-center z-30 pointer-events-none w-full px-4"
-                >
-                   <h2 className="text-[#D4AF37] font-display text-3xl md:text-5xl tracking-wide mb-1 md:mb-2">
-                     The Burl & Jade Collection                     <span className="block text-sm md:text-base tracking-[0.1em] text-[#D4AF37] mt-2 font-light">Exquisite deep tones and curated natural burls</span>
-                   </h2>
-                   <div className="h-0.5 w-12 bg-[#FFD700] mt-2 mb-4 md:mb-6 "></div>
-                   
-                   
-                </motion.div>
               </motion.div>
             );
           })}
@@ -187,8 +170,8 @@ export const Hero = () => {
                       setPage([page + (idx - currentIdx), newDirection]);
                   }
                 }}
-                className={`h-1.5 rounded-full transition-all duration-500 ease-out ${
-                  idx === imageIndex ? 'bg-archora-gold w-10 shadow-[0_0_8px_rgba(212,175,55,0.8)]' : 'bg-gray-300 hover:bg-gray-400 w-3'
+                className={`h-1.5 rounded-full transition-all duration-500 ease-out cursor-pointer ${
+                  idx === imageIndex ? 'bg-archora-gold w-10 shadow-[0_0_8px_rgba(212,175,55,0.8)]' : 'bg-white/30 hover:bg-white/60 w-3'
                 }`}
                 aria-label={`Go to slide ${idx + 1}`}
               />

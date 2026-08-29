@@ -133,7 +133,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     { title: 'Dining', filter: 'Dining' }
   ];
 
-  const defaultLogo = { type: 'text' as const, text: 'ARCHORA', imageUrl: '' };
+  const defaultLogo = { type: 'image' as const, text: 'ARCHORA', imageUrl: '/1787550151155-removebg-preview.png' };
   
   const defaultLayoutConfig: import('../types').LayoutConfig = {
     header: {
@@ -149,17 +149,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       textColor: '#ffffff'
     },
     logoSettings: {
-      type: 'text',
+      type: 'image',
       text: 'ARCHORA',
-      imageUrl: '',
-      width: 150,
-      mobileHeight: 40,
-      desktopHeight: 50
+      imageUrl: '/1787550151155-removebg-preview.png',
+      width: 170,
+      mobileHeight: 36,
+      desktopHeight: 44
     },
     categorySection: {
-      title: 'SELECT A CATEGORY',
-      fontSize: 14,
-      letterSpacing: 2,
+      title: '',
+      fontSize: 28,
+      letterSpacing: 4,
       marginTop: 32,
       marginBottom: 32
     },
@@ -227,7 +227,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ...parsed,
           header: { ...defaultLayoutConfig.header, ...(parsed.header || {}) },
           announcementBar: { ...defaultLayoutConfig.announcementBar, ...(parsed.announcementBar || {}) },
-          logoSettings: { ...defaultLayoutConfig.logoSettings, ...(parsed.logoSettings || {}) },
+          logoSettings: { 
+            ...defaultLayoutConfig.logoSettings, 
+            ...(parsed.logoSettings || {}),
+            imageUrl: (parsed.logoSettings && parsed.logoSettings.imageUrl) ? parsed.logoSettings.imageUrl : '/1787550151155-removebg-preview.png',
+            type: (parsed.logoSettings && parsed.logoSettings.type) ? parsed.logoSettings.type : 'image'
+          },
           categorySection: { ...defaultLayoutConfig.categorySection, ...(parsed.categorySection || {}) },
           categoryCards: { ...defaultLayoutConfig.categoryCards, ...(parsed.categoryCards || {}) },
           heroSettings: { ...defaultLayoutConfig.heroSettings, ...(parsed.heroSettings || {}) },
@@ -273,8 +278,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }));
           }
         }
-      } catch (err) {
-        console.error("Failed to load generic UI config from Firebase:", err);
+      } catch (err: any) {
+        if (err?.code === 'permission-denied') {
+          console.error("Firestore permission denied loading settings:", err);
+        } else {
+          console.warn("Using local configuration while Firestore connects:", err?.message || err);
+        }
       }
     };
     loadConfig();

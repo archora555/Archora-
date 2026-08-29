@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 240" width="100%" height="100%">
+  <defs>
+    <!-- Metallic brushed gold linear gradient -->
+    <linearGradient id="archoraGoldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFF5C8" />
+      <stop offset="15%" stop-color="#F2D785" />
+      <stop offset="35%" stop-color="#DFBA67" />
+      <stop offset="65%" stop-color="#C29737" />
+      <stop offset="85%" stop-color="#95701E" />
+      <stop offset="100%" stop-color="#654807" />
+    </linearGradient>
+
+    <!-- Bevel light overlay gradient -->
+    <linearGradient id="archoraBevelGrad" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+      <stop offset="25%" stop-color="#F5DB94" stop-opacity="0.6" />
+      <stop offset="50%" stop-color="#DFBA67" stop-opacity="0.2" />
+      <stop offset="80%" stop-color="#7C5B14" stop-opacity="0.7" />
+      <stop offset="100%" stop-color="#3D2903" stop-opacity="0.95" />
+    </linearGradient>
+
+    <!-- Horizontal sheen -->
+    <linearGradient id="archoraSheen" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#DFC077" />
+      <stop offset="20%" stop-color="#FFF6D3" />
+      <stop offset="35%" stop-color="#D4AF37" />
+      <stop offset="55%" stop-color="#FDF3B4" />
+      <stop offset="78%" stop-color="#C59B3F" />
+      <stop offset="100%" stop-color="#EED58E" />
+    </linearGradient>
+
+    <!-- 3D drop shadow filter for luxury depth -->
+    <filter id="archoraDropShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="#140d02" flood-opacity="0.75" />
+      <feDropShadow dx="0" dy="1" stdDeviation="0.5" flood-color="#000000" flood-opacity="0.5" />
+    </filter>
+  </defs>
+
+  <style>
+    .archora-char {
+      font-family: 'Cinzel', 'Playfair Display', 'C059', 'Times New Roman', serif;
+      font-size: 154px;
+      font-weight: 700;
+      fill: url(#archoraGoldGrad);
+      filter: url(#archoraDropShadow);
+    }
+  </style>
+
+  <g filter="url(#archoraDropShadow)" transform="translate(10, 16)">
+    <!-- Letters ARC -->
+    <text x="30" y="160" class="archora-char" letter-spacing="1">A</text>
+    <text x="175" y="160" class="archora-char" letter-spacing="1">R</text>
+    <text x="320" y="160" class="archora-char" letter-spacing="1">C</text>
+
+    <!-- CHAIR ACTING AS H -->
+    <!-- Positioned precisely between C and O -->
+    <g id="chair-h-icon" transform="translate(450, 32)">
+      <!-- Outer backrest & rear leg contour (graceful back curve and leg) -->
+      <path 
+        d="M 12 0 
+           C 6 0, 1 8, 1 18 
+           L 4 75 
+           C 5 92, 6 112, 6 132 
+           L 14 132 
+           C 14 112, 13 92, 12 75 
+           L 8 18 
+           C 8 10, 11 5, 14 5 
+           Z" 
+        fill="url(#archoraGoldGrad)" 
+        stroke="url(#archoraBevelGrad)" 
+        stroke-width="1.2" 
+      />
+
+      <!-- Main Chair body: Inner tubular backrest, ergonomic flowing seat, and front leg -->
+      <path 
+        d="M 23 2 
+           C 18 2, 14 10, 14 20 
+           L 18 72 
+           C 19 80, 24 85, 32 85 
+           L 82 84 
+           C 91 84, 97 91, 97 100 
+           L 98 132 
+           L 106 132 
+           L 105 98 
+           C 105 86, 96 77, 84 77 
+           L 34 77 
+           C 28 77, 25 73, 24 68 
+           L 21 20 
+           C 21 12, 24 7, 27 7 
+           Z" 
+        fill="url(#archoraGoldGrad)" 
+        stroke="url(#archoraBevelGrad)" 
+        stroke-width="1.2" 
+      />
+
+      <!-- Front second leg (3D depth offset) -->
+      <path 
+        d="M 85 85 
+           L 87 132 
+           L 93 132 
+           L 91 85 
+           Z" 
+        fill="url(#archoraGoldGrad)" 
+        stroke="url(#archoraBevelGrad)" 
+        stroke-width="0.9" 
+      />
+
+      <!-- Rear second leg (under seat) -->
+      <path 
+        d="M 23 85 
+           L 23 132 
+           L 28 132 
+           L 28 85 
+           Z" 
+        fill="url(#archoraGoldGrad)" 
+        stroke="url(#archoraBevelGrad)" 
+        stroke-width="0.9" 
+      />
+    </g>
+
+    <!-- Letters ORA -->
+    <text x="580" y="160" class="archora-char" letter-spacing="1">O</text>
+    <text x="735" y="160" class="archora-char" letter-spacing="1">R</text>
+    <text x="865" y="160" class="archora-char" letter-spacing="1">A</text>
+  </g>
+</svg>

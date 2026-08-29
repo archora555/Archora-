@@ -24,10 +24,10 @@ export const CategoryView = () => {
   const categoryProducts = products.filter(p => p.subCategory?.toLowerCase() === subCat.name.toLowerCase() || p.category.toLowerCase() === subCat.name.toLowerCase());
 
   return (
-    <div className="w-full pt-32 pb-24 px-6 max-w-7xl mx-auto min-h-screen">
+    <div className="w-full pt-32 pb-24 px-6 max-w-7xl mx-auto min-h-screen text-white">
       <div className="mb-12">
-        <h1 className="font-display text-4xl md:text-5xl mb-4">{subCat.name}</h1>
-        <p className="text-gray-500 uppercase tracking-widest text-sm">Explore our {subCat.name} collection</p>
+        <h1 className="font-display text-4xl md:text-5xl mb-4 text-white">{subCat.name}</h1>
+        <p className="text-gray-300 uppercase tracking-widest text-sm">Explore our {subCat.name} collection</p>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
@@ -40,8 +40,8 @@ export const CategoryView = () => {
             />
           ))
         ) : (
-          <div className="col-span-full py-20 text-center text-gray-500">
-            <p className="text-xl font-display mb-2">No pieces found in this category</p>
+          <div className="col-span-full py-20 text-center text-gray-400">
+            <p className="text-xl font-display mb-2 text-white">No pieces found in this category</p>
             <p>Check back later for new arrivals.</p>
           </div>
         )}

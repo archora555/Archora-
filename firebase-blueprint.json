@@ -71,6 +71,60 @@
         "createdAt": { "type": "number" }
       },
       "required": ["email", "createdAt"]
+    },
+    "quote": {
+      "title": "Quote",
+      "description": "A customer quote request.",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string" },
+        "productName": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerEmail": { "type": "string" },
+        "size": { "type": "string" },
+        "color": { "type": "string" },
+        "material": { "type": "string" },
+        "notes": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "number" }
+      }
+    },
+    "review": {
+      "title": "Review",
+      "description": "A product review.",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "createdAt": { "type": "number" }
+      }
+    },
+    "coupon": {
+      "title": "Coupon",
+      "description": "A promotional discount coupon.",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "type": { "type": "string" },
+        "value": { "type": "number" },
+        "expiryDate": { "type": "string" },
+        "isActive": { "type": "boolean" }
+      }
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Frontend configuration and layout settings.",
+      "type": "object",
+      "properties": {
+        "heroBanners": { "type": "array" },
+        "subCategories": { "type": "array" },
+        "homeSections": { "type": "array" },
+        "logoConfig": { "type": "object" },
+        "menuItems": { "type": "array" },
+        "layoutConfig": { "type": "object" }
+      }
     }
   },
   "firestore": {
@@ -93,6 +147,22 @@
     "/admins/{userId}": {
       "schema": { "$ref": "#/entities/admin" },
       "description": "Admin privileges marker collection"
+    },
+    "/quotes/{quoteId}": {
+      "schema": { "$ref": "#/entities/quote" },
+      "description": "Customer quote requests"
+    },
+    "/reviews/{reviewId}": {
+      "schema": { "$ref": "#/entities/review" },
+      "description": "Product customer reviews"
+    },
+    "/coupons/{couponId}": {
+      "schema": { "$ref": "#/entities/coupon" },
+      "description": "Discount coupons"
+    },
+    "/settings/{docId}": {
+      "schema": { "$ref": "#/entities/settings" },
+      "description": "Site and layout configuration"
     }
   }
 }

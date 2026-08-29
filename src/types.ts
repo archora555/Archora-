@@ -127,4 +127,31 @@ export interface LayoutConfig {
   sectionOrder: string[];
 }
 
+export type CurrencyCode = 'USD' | 'BDT' | 'CRYPTO';
+
+export interface CurrencyConfig {
+  activeCurrency: CurrencyCode;
+  defaultCurrency: CurrencyCode;
+  rates: {
+    USD: number; // 1
+    BDT: number; // e.g. 122
+    CRYPTO: number; // e.g. 0.00038
+  };
+  cryptoSettings: {
+    code: string; // 'ETH' | 'BTC' | 'USDT' | 'SOL'
+    name: string;
+    symbol: string;
+    decimals: number;
+    usdPerCrypto: number; // e.g. 2630 ($2,630 per 1 ETH)
+    walletAddress?: string;
+  };
+  bdtSettings: {
+    symbol: string;
+    symbolPosition: 'prefix' | 'suffix';
+  };
+  usdSettings: {
+    symbol: string;
+  };
+}
+
 export type ViewState = 'home' | 'shop' | 'cart' | 'wishlist' | 'checkout' | 'admin' | 'account' | 'tracking' | 'profile';

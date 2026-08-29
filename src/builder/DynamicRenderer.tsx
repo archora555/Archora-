@@ -7,7 +7,7 @@ import { CategorySelector } from '../components/CategorySelector';
 
 // Placeholder mapping of types to actual React components
 const ComponentsMap: Record<string, React.FC<any>> = {
-  Header: () => <div className="p-4 bg-gray-100 text-center font-bold">Header Placeholder (Uses Navbar internally if desired)</div>,
+  Header: () => <div className="p-4 frosted-glass-white-card text-archora-gold text-center font-bold border border-white/10 rounded-xl">Header Placeholder (Uses Navbar internally if desired)</div>,
   Hero: ({ title, subtitle }) => <div className="p-20 bg-gray-900 text-white text-center"><h1>{title}</h1><p>{subtitle}</p></div>,
   Footer: () => <div className="p-10 bg-black text-white text-center">Footer</div>,
   Section: ({ children }) => <div className="w-full flex flex-col">{children}</div>,
@@ -15,7 +15,7 @@ const ComponentsMap: Record<string, React.FC<any>> = {
   Button: ({ text }) => <button className="px-6 py-3 bg-blue-600 text-white rounded">{text}</button>
 };
 
-export const DynamicElement = ({ node }: { node: ComponentNode }) => {
+export const DynamicElement: React.FC<{ node: ComponentNode }> = ({ node }) => {
   const { selectedId, setSelectedId, isEditMode, updateNode } = useBuilder();
   const isSelected = selectedId === node.id;
 
