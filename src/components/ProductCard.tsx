@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Heart, ShoppingBag, Box, Eye } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { ProductQuickView } from './ProductQuickView';
+import { useCurrency } from '../hooks/useCurrency';
 
 interface ProductCardProps {
   product: Product;
@@ -12,6 +13,7 @@ interface ProductCardProps {
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onClick }) => {
   const { wishlist, toggleWishlist, addToCart } = useAppContext();
+  const { formatPrice } = useCurrency();
   const isWishlisted = wishlist.includes(product.id);
   const [isHovered, setIsHovered] = useState(false);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
@@ -53,29 +55,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onClick }) =>
 
           {/* Badges */}
           <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10 pointer-events-none">
-            {product.category && product.category !== 'All' && ['Sale', 'New Arrivals', 'Best Seller'].includes(product.category) && (
-              <span 
-                className={`inline-flex items-center gap-1.5 text-[9px] md:text-[10px] font-bold px-2.5 py-1 uppercase tracking-widest rounded-md shadow-[0_4px_16px_rgba(0,0,0,0.6)] backdrop-blur-md ${
-                  product.category === 'Best Seller'
-                    ? 'bg-[#0e0e11]/95 text-white border border-[#DFBA67]/70'
-                    : product.category === 'Sale'
-                    ? 'bg-[#0e0e11]/95 text-[#FF9E9E] border border-rose-500/60'
-                    : 'bg-[#0e0e11]/95 text-white border border-white/30'
-                }`}
-                style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
-              >
-                <span 
-                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                    product.category === 'Best Seller'
-                      ? 'bg-[#DFBA67] shadow-[0_0_8px_#DFBA67]'
-                      : product.category === 'Sale'
-                      ? 'bg-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.8)]'
-                      : 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]'
-                  }`} 
-                />
-                {product.category}
-              </span>
-            )}
             {!product.inStock && (
               <span 
                 className="inline-flex items-center gap-1.5 bg-[#0e0e11]/95 text-[#DFBA67] border border-[#DFBA67]/70 text-[9px] md:text-[10px] font-bold px-2.5 py-1 uppercase tracking-widest shadow-[0_4px_16px_rgba(0,0,0,0.6)] rounded-md backdrop-blur-md"
@@ -139,7 +118,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onClick }) =>
 
             {/* Center: Price */}
             <p className="text-[#DFBA67] font-medium text-xs sm:text-sm md:text-base tracking-wide drop-shadow-sm px-1">
-              ${product.price.toLocaleString()}
+              {formatPrice(product.price)}
             </p>
 
             {/* Right: Add to Cart / Bag */}

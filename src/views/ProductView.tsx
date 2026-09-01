@@ -5,11 +5,13 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Heart, Map, ChevronLeft, ChevronRight, Check, Box, MessageCircle, Star } from 'lucide-react';
 import { ProductCard } from '../components/ProductCard';
 import '@google/model-viewer';
+import { useCurrency } from '../hooks/useCurrency';
 
 export const ProductView = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { products, wishlist, toggleWishlist, addToCart, setCurrentView } = useAppContext();
+  const { formatPrice } = useCurrency();
   
   const product = products.find(p => p.id === id);
 
@@ -161,7 +163,7 @@ export const ProductView = () => {
             </div>
             
             <h1 className="text-3xl md:text-5xl font-display font-medium text-white mb-4 leading-tight">{product.name}</h1>
-            <p className="text-2xl font-light text-[#DFBA67] mb-6">${product.price.toLocaleString()}</p>
+            <p className="text-2xl font-light text-[#DFBA67] mb-6">{formatPrice(product.price)}</p>
             
             <p className="text-gray-300 mb-8 leading-relaxed text-sm md:text-base">
               {product.description}

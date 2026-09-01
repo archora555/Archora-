@@ -9,7 +9,7 @@ export const ShopView = () => {
   const [selectedCat, setSelectedCat] = useState<string>('All');
   const navigate = useNavigate();
   
-  const categories = ['All', 'Living', 'Bedroom', 'Dining', 'Office Use Pro', 'New Arrivals', 'Sale', 'Best Seller'];
+  const categories = ['All', 'Living', 'Bedroom', 'Dining', 'Office Use Pro', 'New Arrivals', 'Sale'];
 
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 

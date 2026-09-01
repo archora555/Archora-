@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import '@google/model-viewer';
+import { useCurrency } from '../hooks/useCurrency';
 
 export interface ProductQuickViewProps {
   product: Product;
@@ -25,6 +26,7 @@ export interface ProductQuickViewProps {
 
 export const ProductQuickView: React.FC<ProductQuickViewProps> = ({ product, onClose }) => {
   const { wishlist, toggleWishlist, addToCart, setCurrentView } = useAppContext();
+  const { formatPrice } = useCurrency();
   const [currentImageIdx, setCurrentImageIdx] = useState(0);
   const [selectedColor, setSelectedColor] = useState(product.colors[0] || 'Default');
   const [quantity, setQuantity] = useState(1);
@@ -282,7 +284,7 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({ product, onC
 
             <div className="flex items-center gap-4 mb-4">
               <p className="text-2xl font-light text-[#DFBA67]">
-                ${product.price.toLocaleString()}
+                {formatPrice(product.price)}
               </p>
               <span className={`text-xs uppercase tracking-wider font-semibold px-2.5 py-0.5 rounded-sm ${
                 product.inStock ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
@@ -466,7 +468,7 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({ product, onC
             <div className="mt-3 flex flex-col gap-2.5">
               <button 
                 onClick={() => {
-                  const message = encodeURIComponent(`Hi, I want to order ${product.name} for $${product.price}. Link: ${window.location.origin}/shop?productId=${product.id}`);
+                  const message = encodeURIComponent(`Hi, I want to order ${product.name} for ${formatPrice(product.price)}. Link: ${window.location.origin}/shop?productId=${product.id}`);
                   window.open(`https://wa.me/1234567890?text=${message}`, '_blank');
                 }}
                 className="w-full border border-emerald-500/40 bg-emerald-950/30 hover:bg-emerald-900/50 text-emerald-300 hover:text-emerald-200 py-2.5 px-5 uppercase tracking-widest text-xs font-semibold rounded-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-sm group cursor-pointer"

@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { Package, Search, MapPin, Truck, CheckCircle } from 'lucide-react';
 import { Order } from '../types';
+import { useCurrency } from '../hooks/useCurrency';
 
 export const OrderTrackingView = () => {
   const { orders } = useAppContext();
+  const { formatPrice } = useCurrency();
   const [searchTerm, setSearchTerm] = useState('');
   const [trackedOrder, setTrackedOrder] = useState<Order | null>(null);
   const [error, setError] = useState('');
@@ -122,7 +124,7 @@ export const OrderTrackingView = () => {
                      <div>
                        <p className="font-semibold text-sm text-white">{item.product.name}</p>
                        <p className="text-xs text-gray-400">Qty: {item.quantity} | {item.selectedColor}</p>
-                       <p className="text-sm font-medium text-[#DFBA67] mt-1">${(item.product.price * item.quantity).toLocaleString()}</p>
+                      <p className="text-sm font-medium text-[#DFBA67] mt-1">{formatPrice(item.product.price * item.quantity)}</p>
                      </div>
                    </div>
                  ))}

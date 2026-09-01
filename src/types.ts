@@ -127,7 +127,7 @@ export interface LayoutConfig {
   sectionOrder: string[];
 }
 
-export type CurrencyCode = 'USD' | 'BDT' | 'CRYPTO';
+export type CurrencyCode = 'USD' | 'BDT' | 'BTC';
 
 export interface CurrencyConfig {
   activeCurrency: CurrencyCode;
@@ -135,7 +135,7 @@ export interface CurrencyConfig {
   rates: {
     USD: number; // 1
     BDT: number; // e.g. 122
-    CRYPTO: number; // e.g. 0.00038
+    BTC: number; // e.g. 0.00038
   };
   cryptoSettings: {
     code: string; // 'ETH' | 'BTC' | 'USDT' | 'SOL'

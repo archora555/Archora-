@@ -6,7 +6,7 @@ export const initialProducts: Product[] = [
     name: 'Aurelia Velvet Sofa',
     description: 'Experience unparalleled luxury with the Aurelia Velvet Sofa. Upholstered in premium Italian velvet, this masterpiece features a sleek silhouette, deep-seated comfort, and polished metallic gold legs. Perfect for modern and classic interiors equally.',
     price: 3499,
-    category: 'Best Seller',
+    category: 'Living',
     images: [
       'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=1000',
       'https://images.unsplash.com/photo-1519947486511-46149fa0a254?auto=format&fit=crop&q=80&w=1000'
@@ -78,7 +78,7 @@ export const initialProducts: Product[] = [
     name: 'Nocturne Walnut Bed Frame',
     description: 'The Nocturne bed frame is a masterclass in minimalist design. Crafted from solid American walnut, it features a low-profile platform and an oversized floating headboard with integrated brass reading lights.',
     price: 4100,
-    category: 'Best Seller',
+    category: 'Living',
     images: [
       'https://images.unsplash.com/photo-1505693314120-0d443867891c?auto=format&fit=crop&q=80&w=1000',
       'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&q=80&w=1000'

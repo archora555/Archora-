@@ -46,6 +46,8 @@ export interface AppContextType {
   setCurrentUser: (user: any | null) => void;
   isVisualEditMode: boolean;
   setIsVisualEditMode: (mode: boolean) => void;
+  currencyConfig: import('../types').CurrencyConfig;
+  setCurrencyConfig: React.Dispatch<React.SetStateAction<import('../types').CurrencyConfig>>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -126,7 +128,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   ];
   const defaultSections = [
     { title: 'New Arrivals', filter: 'New Arrivals' },
-    { title: 'Best Seller', filter: 'Best Seller' },
     { title: 'Office Use Pro', filter: 'Office Use Pro' },
     { title: 'Living Room', filter: 'Living' },
     { title: 'Bedroom', filter: 'Bedroom' },
@@ -188,9 +189,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     sectionOrder: ['hero', 'categories', 'featured', 'newArrivals', 'footer']
   };
   const defaultMenu = [
-    { id: 'm1', label: 'Cart', action: 'cart' },
-    { id: 'm2', label: 'Track Order', action: 'tracking' }
+    { id: 'm1', label: 'Home', action: 'home' },
+    { id: 'm2', label: 'Shop', action: 'shop' },
+    { id: 'm3', label: 'Collections', action: 'shop' },
+    { id: 'm4', label: 'Lookbook', action: 'shop' },
+    { id: 'm5', label: 'Journal', action: 'home' },
+    { id: 'm6', label: 'Wishlist', action: 'wishlist' },
+    { id: 'm7', label: 'Cart', action: 'cart' },
+    { id: 'm8', label: 'My Account', action: 'profile' },
+    { id: 'm9', label: 'Contact us', action: 'contact' },
+    { id: 'm10', label: 'Language', action: 'language' },
+    { id: 'm11', label: 'Currency', action: 'currency' }
   ];
+
+  const defaultCurrencyConfig: import('../types').CurrencyConfig = {
+    activeCurrency: 'BDT',
+    defaultCurrency: 'BDT',
+    rates: {
+      USD: 1,
+      BDT: 120,
+      BTC: 0.000015, // Approx BTC rate placeholder
+    },
+    cryptoSettings: {
+      code: 'BTC',
+      name: 'Bitcoin',
+      symbol: '₿',
+      decimals: 5,
+      usdPerCrypto: 65000,
+      walletAddress: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa'
+    },
+    bdtSettings: {
+      symbol: '৳',
+      symbolPosition: 'prefix'
+    },
+    usdSettings: {
+      symbol: '$'
+    }
+  };
 
   const [heroBanners, setHeroBanners] = useState(() => {
     try {
@@ -245,9 +280,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
   const [menuItems, setMenuItems] = useState(() => {
     try {
-      const saved = localStorage.getItem('archora_menuItems');
+      const saved = localStorage.getItem('archora_menuItems_v2');
       return saved ? JSON.parse(saved) : defaultMenu;
     } catch { return defaultMenu; }
+  });
+
+  const [currencyConfig, setCurrencyConfig] = useState<import('../types').CurrencyConfig>(() => {
+    try {
+      const saved = localStorage.getItem('archora_currencyConfig');
+      return saved ? JSON.parse(saved) : defaultCurrencyConfig;
+    } catch { return defaultCurrencyConfig; }
   });
 
   useEffect(() => {
@@ -262,7 +304,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (data.subCategories) setSubCategories(data.subCategories);
           if (data.homeSections) setHomeSections(data.homeSections);
           if (data.logoConfig) setLogoConfig(data.logoConfig);
-          if (data.menuItems) setMenuItems(data.menuItems);
+          if (data.menuItems) {
+            if (data.menuItems.length < 11) {
+              setMenuItems(defaultMenu);
+            } else {
+              setMenuItems(data.menuItems);
+            }
+          }
+          if (data.currencyConfig) setCurrencyConfig(data.currencyConfig);
           if (data.layoutConfig) {
             setLayoutConfig(prev => ({
               ...defaultLayoutConfig,
@@ -296,7 +345,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         localStorage.setItem('archora_subCategories', JSON.stringify(subCategories));
         localStorage.setItem('archora_homeSections', JSON.stringify(homeSections));
         localStorage.setItem('archora_logoConfig', JSON.stringify(logoConfig));
-        localStorage.setItem('archora_menuItems', JSON.stringify(menuItems));        localStorage.setItem('archora_layoutConfig', JSON.stringify(layoutConfig));
+        localStorage.setItem('archora_menuItems_v2', JSON.stringify(menuItems));
+        localStorage.setItem('archora_currencyConfig', JSON.stringify(currencyConfig));
+        localStorage.setItem('archora_layoutConfig', JSON.stringify(layoutConfig));
       } catch (storageError) {
         console.warn('Could not save all settings to localStorage (quota exceeded).', storageError);
       }
@@ -308,6 +359,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
          homeSections,
          logoConfig,
          menuItems,
+         currencyConfig,
          layoutConfig
       }, { merge: true });
       // alert('Settings saved successfully!');
@@ -413,7 +465,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       saveSettingsToFirebase,
       appliedCoupon, setAppliedCoupon,
       currentUser, setCurrentUser,
-      isVisualEditMode, setIsVisualEditMode
+      isVisualEditMode, setIsVisualEditMode,
+      currencyConfig, setCurrencyConfig
     }}>
       {children}
     </AppContext.Provider>

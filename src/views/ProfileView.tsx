@@ -1,9 +1,11 @@
 import React from 'react';
 import { useAppContext } from '../context/AppContext';
 import { User, Package, Heart, LogOut } from 'lucide-react';
+import { useCurrency } from '../hooks/useCurrency';
 
 export const ProfileView = () => {
   const { currentUser, setCurrentUser, orders, wishlist, setCurrentView } = useAppContext();
+  const { formatPrice } = useCurrency();
 
   if (!currentUser) {
     return (
@@ -125,7 +127,7 @@ export const ProfileView = () => {
                       <p className="text-sm text-gray-400">{new Date(order.createdAt).toLocaleDateString()}</p>
                     </div>
                     <div className="flex items-center gap-6">
-                      <span className="font-medium text-[#DFBA67]">${order.total.toLocaleString()}</span>
+                      <span className="font-medium text-[#DFBA67]">{formatPrice(order.total)}</span>
                       <span className={`text-xs px-3 py-1 rounded-full border ${
                         order.status === 'delivered' ? 'bg-green-500/20 text-green-300 border-green-500/30' :
                         order.status === 'processing' ? 'bg-blue-500/20 text-blue-300 border-blue-500/30' :

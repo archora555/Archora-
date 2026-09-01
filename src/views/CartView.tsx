@@ -3,9 +3,11 @@ import { useAppContext } from '../context/AppContext';
 import { motion } from 'motion/react';
 import { Trash2, ArrowRight } from 'lucide-react';
 import { Coupon } from '../types';
+import { useCurrency } from '../hooks/useCurrency';
 
 export const CartView = () => {
   const { cart, updateCartQuantity, removeFromCart, setCurrentView, appliedCoupon, setAppliedCoupon } = useAppContext();
+  const { formatPrice } = useCurrency();
   
   const [couponCode, setCouponCode] = useState(appliedCoupon ? appliedCoupon.code : '');
   const [couponError, setCouponError] = useState('');
@@ -90,7 +92,7 @@ export const CartView = () => {
                 <div>
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-display text-xl md:text-2xl text-white">{item.product.name}</h3>
-                    <p className="font-medium text-[#DFBA67]">${(item.product.price * item.quantity).toLocaleString()}</p>
+                    <p className="font-medium text-[#DFBA67]">{formatPrice(item.product.price * item.quantity)}</p>
                   </div>
                   <p className="text-sm text-gray-400 mb-1">Color: {item.selectedColor}</p>
                 </div>
@@ -126,16 +128,16 @@ export const CartView = () => {
             <div className="flex flex-col gap-4 text-sm border-b border-white/10 pb-6 mb-6">
               <div className="flex justify-between">
                 <span className="text-gray-400">Subtotal</span>
-                <span className="text-white">${subtotal.toLocaleString()}</span>
+                <span className="text-white">{formatPrice(subtotal)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">White Glove Delivery</span>
-                <span className="text-white">{shipping === 0 ? 'Complimentary' : `$${shipping.toLocaleString()}`}</span>
+                <span className="text-white">{shipping === 0 ? 'Complimentary' : formatPrice(shipping)}</span>
               </div>
               {appliedCoupon && (
                 <div className="flex justify-between text-archora-gold">
                   <span>Discount ({appliedCoupon.code})</span>
-                  <span>-${discountAmount.toLocaleString()}</span>
+                  <span>-{formatPrice(discountAmount)}</span>
                 </div>
               )}
             </div>
@@ -161,7 +163,7 @@ export const CartView = () => {
 
             <div className="flex justify-between text-lg font-medium mb-8">
               <span className="text-white">Total</span>
-              <span className="text-[#DFBA67] font-display text-2xl">${total.toLocaleString()}</span>
+              <span className="text-[#DFBA67] font-display text-2xl">{formatPrice(total)}</span>
             </div>
             <button 
               onClick={() => setCurrentView('checkout')}

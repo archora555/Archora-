@@ -5,13 +5,6 @@ import { useAppContext } from '../context/AppContext';
 import { EditableWrapper } from './VisualEditor/EditableWrapper';
 import { useNavigate } from 'react-router-dom';
 
-const menuItems = [
-  { id: 1, label: 'Shop', action: 'shop' },
-  { id: 2, label: 'Lookbook', action: 'shop' },
-  { id: 3, label: 'Journal', action: 'shop' },
-  { id: 4, label: 'Cart', action: 'cart' }
-];
-
 export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -19,11 +12,13 @@ export const Navbar = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  const { cart, wishlist, currentUser, setCurrentUser, layoutConfig, setLayoutConfig, setCurrentView } = useAppContext();
+  const { cart, wishlist, currentUser, setCurrentUser, layoutConfig, setLayoutConfig, setCurrentView, currencyConfig, setCurrencyConfig, menuItems } = useAppContext();
   const navigate = useNavigate();
   const cartItemsCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   
   const profileRef = useRef<HTMLDivElement>(null);
+  const currencyRef = useRef<HTMLDivElement>(null);
+  const [isCurrencyOpen, setIsCurrencyOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,6 +32,9 @@ export const Navbar = () => {
     const handleClickOutside = (event: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setIsProfileOpen(false);
+      }
+      if (currencyRef.current && !currencyRef.current.contains(event.target as Node)) {
+        setIsCurrencyOpen(false);
       }
     };
 
@@ -130,8 +128,8 @@ export const Navbar = () => {
         
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-3 items-center">
         
-        {/* Left Side: Hamburger Menu */}
-        <div className="flex items-center justify-start relative z-10 w-full col-span-1">
+        {/* Left Side: Hamburger Menu & Left Actions */}
+        <div className="flex items-center justify-start gap-4 md:gap-6 relative z-10 w-full col-span-1">
           <div className="relative">
             <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="hover:text-archora-gold transition-colors text-white border-none bg-transparent m-0 p-0 shadow-none">
               <Menu className="w-6 h-6 md:w-8 md:h-8" strokeWidth={1.5} />
@@ -155,9 +153,56 @@ export const Navbar = () => {
                     />
                   </div>
                   {menuItems.map(item => (
-                    <button key={item.id} onClick={() => { navigate('/'); setCurrentView(item.action as any); setIsMenuOpen(false); }} className="px-4 py-2.5 text-left text-sm hover:bg-white/20 flex items-center gap-3 text-white transition-colors">
+                    <button 
+                      key={item.id} 
+                      onClick={() => { 
+                        setIsMenuOpen(false);
+                        if (item.action === 'currency') {
+                          setTimeout(() => setIsCurrencyOpen(true), 100);
+                        } else if (item.action === 'language') {
+                          // Placeholder for language
+                        } else {
+                          navigate('/'); 
+                          setCurrentView(item.action as any); 
+                        }
+                      }} 
+                      className="px-4 py-2.5 text-left text-sm hover:bg-white/20 flex items-center gap-3 text-white transition-colors"
+                    >
                       <span>{item.label}</span>
                       {item.action === 'cart' && cartItemsCount > 0 && ` (${cartItemsCount})`}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Currency Switcher */}
+          <div className="relative" ref={currencyRef}>
+            <button 
+              onClick={() => setIsCurrencyOpen(!isCurrencyOpen)}
+              className="text-xs md:text-sm font-semibold tracking-wider text-white hover:text-archora-gold transition-colors"
+            >
+              {currencyConfig.activeCurrency}
+            </button>
+            <AnimatePresence>
+              {isCurrencyOpen && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute left-0 mt-4 w-24 frosted-glass-white-dropdown py-2 flex flex-col z-50 rounded-2xl text-white overflow-hidden shadow-2xl"
+                >
+                  {['USD', 'BDT', 'BTC'].map((curr) => (
+                    <button 
+                      key={curr}
+                      onClick={() => {
+                        setCurrencyConfig({ ...currencyConfig, activeCurrency: curr as any });
+                        setIsCurrencyOpen(false);
+                      }}
+                      className={`px-4 py-2 text-left text-xs tracking-wider transition-colors hover:bg-white/20 ${currencyConfig.activeCurrency === curr ? 'text-archora-gold font-bold' : 'text-white'}`}
+                    >
+                      {curr}
                     </button>
                   ))}
                 </motion.div>
@@ -177,8 +222,9 @@ export const Navbar = () => {
           </div>
         </div>
         
-        {/* Right Side: Search and User */}
+        {/* Right Side: Search, Profile and Cart */}
         <div className="flex items-center justify-end order-3 col-span-1 gap-4 md:gap-6">
+          {/* Search */}
           {isSearchOpen ? (
             <motion.form 
               initial={{ width: 0, opacity: 0 }}

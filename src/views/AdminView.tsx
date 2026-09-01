@@ -6,6 +6,7 @@ import { Order, Product, QuoteRequest, Coupon } from '../types';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { DEFAULT_SHADER_PARAMS, SilkShaderParams, SHADER_PRESETS } from '../components/SilkShaderBackground';
 import { ArchoraLogo } from '../components/ArchoraLogo';
+import { useCurrency } from '../hooks/useCurrency';
 
 const compressImage = (file: File, maxSize: number = 1000): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -50,7 +51,8 @@ const compressImage = (file: File, maxSize: number = 1000): Promise<string> => {
 export const AdminView = () => {
     const { isVisualEditMode, setIsVisualEditMode } = useAppContext();
   const { setIsEditMode } = useBuilder();
-  const { orders, products, setProducts, setOrders, heroBanners, setHeroBanners, subCategories, setSubCategories, homeSections, setHomeSections, logoConfig, setLogoConfig, menuItems, setMenuItems, isAdminLoggedIn, setIsAdminLoggedIn, saveSettingsToFirebase, layoutConfig, setLayoutConfig} = useAppContext();
+  const { orders, products, setProducts, setOrders, heroBanners, setHeroBanners, subCategories, setSubCategories, homeSections, setHomeSections, logoConfig, setLogoConfig, menuItems, setMenuItems, isAdminLoggedIn, setIsAdminLoggedIn, saveSettingsToFirebase, layoutConfig, setLayoutConfig, currencyConfig, setCurrencyConfig } = useAppContext();
+  const { formatPrice } = useCurrency();
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -98,7 +100,7 @@ export const AdminView = () => {
   const [pName, setPName] = useState('');
   const [pDesc, setPDesc] = useState('');
   const [pPrice, setPPrice] = useState(0);
-  const [pCategory, setPCategory] = useState('Best Seller');
+  const [pCategory, setPCategory] = useState('Living');
   const [pSubCategory, setPSubCategory] = useState('');
   const [pMaterials, setPMaterials] = useState('');
   const [pImages, setPImages] = useState<string[]>(['']);
@@ -276,7 +278,7 @@ export const AdminView = () => {
       {activeTab === 'dashboard' && (
         <div className="space-y-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatCard title="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon={TrendingUp} />
+            <StatCard title="Total Revenue" value={formatPrice(totalRevenue)} icon={TrendingUp} />
             <StatCard title="Orders" value={orders.length} icon={ShoppingBag} />
             <StatCard title="Total Customers" value={customers.length} icon={Users} />
             <StatCard title="Catalog Size" value={products.length} icon={Package} />
@@ -293,7 +295,7 @@ export const AdminView = () => {
                       <p className="text-xs text-gray-400">{new Date(order.date).toLocaleString()} • {order.items.length} items</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium text-sm text-[#DFBA67]">${order.total.toLocaleString()}</p>
+                      <p className="font-medium text-sm text-[#DFBA67]">{formatPrice(order.total)}</p>
                       <span className="text-[10px] uppercase tracking-widest bg-white/10 text-gray-300 border border-white/10 px-2 py-0.5 mt-1 inline-block rounded">{order.status}</span>
                     </div>
                   </div>
@@ -349,14 +351,14 @@ export const AdminView = () => {
                         
                         {/* Mobile Actions and Details */}
                         <div className="sm:hidden flex flex-wrap gap-x-3 gap-y-1 mt-1">
-                          <span className="text-xs font-bold text-white w-full">${product.price.toLocaleString()}</span>
+                          <span className="text-xs font-bold text-white w-full">{formatPrice(product.price)}</span>
                           <button onClick={() => openEditProduct(product)} className="text-xs text-archora-gold font-bold uppercase tracking-wider">Edit</button>
                           <button onClick={() => handleDeleteProduct(product.id)} className="text-xs text-red-400 font-bold uppercase tracking-wider">Remove</button>
                         </div>
                       </div>
                     </td>
                     <td className="p-4 text-gray-300 text-sm hidden lg:table-cell">{product.category}</td>
-                    <td className="p-4 font-medium text-white hidden sm:table-cell">${product.price.toLocaleString()}</td>
+                    <td className="p-4 font-medium text-white hidden sm:table-cell">{formatPrice(product.price)}</td>
                     <td className="p-4 hidden md:table-cell">
                       <div className="flex items-center gap-2">
                         <span className={`w-2 h-2 rounded-full ${product.inStock && product.stockCount > 5 ? 'bg-emerald-400' : product.inStock ? 'bg-amber-400' : 'bg-red-400'}`}></span>
@@ -404,7 +406,7 @@ export const AdminView = () => {
                       <p className="font-medium text-white">{order.customerInfo.name}</p>
                       <p className="text-xs text-gray-400">{order.customerInfo.email}</p>
                     </td>
-                    <td className="p-4 font-medium text-white">${order.total.toLocaleString()}</td>
+                    <td className="p-4 font-medium text-white">{formatPrice(order.total)}</td>
                     <td className="p-4">
                       <select 
                         value={order.status}
@@ -465,7 +467,7 @@ export const AdminView = () => {
                           {c.status}
                         </span>
                       </td>
-                      <td className="p-4 font-medium text-white">${c.totalSpent.toLocaleString()}</td>
+                      <td className="p-4 font-medium text-white">{formatPrice(c.totalSpent)}</td>
                       <td className="p-4 text-sm text-gray-300">{c.orderCount}</td>
                       <td className="p-4">
                         <button 
@@ -761,6 +763,76 @@ export const AdminView = () => {
           </div>
 
           <div className="frosted-glass-white-card rounded-2xl p-6 md:p-8 shadow-2xl text-white">
+            <h2 className="font-display text-2xl mb-6">Currency Configuration</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <label className="block text-sm mb-2 text-gray-300">Default Store Currency</label>
+                <select 
+                  value={currencyConfig.defaultCurrency} 
+                  onChange={e => setCurrencyConfig({...currencyConfig, defaultCurrency: e.target.value as any, activeCurrency: e.target.value as any})}
+                  className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg p-2.5 text-sm outline-none focus:border-archora-gold"
+                >
+                  <option value="USD" className="bg-[#141414] text-white">USD</option>
+                  <option value="BDT" className="bg-[#141414] text-white">BDT</option>
+                  <option value="BTC" className="bg-[#141414] text-white">BTC</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm mb-2 text-gray-300">BDT Rate (1 USD = X BDT)</label>
+                <input 
+                  type="number"
+                  step="0.01"
+                  value={currencyConfig.rates.BDT}
+                  onChange={e => setCurrencyConfig({...currencyConfig, rates: { ...currencyConfig.rates, BDT: parseFloat(e.target.value) || 0 }})}
+                  className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg p-2.5 text-sm outline-none focus:border-archora-gold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm mb-2 text-gray-300">Crypto Name</label>
+                <input 
+                  type="text"
+                  value={currencyConfig.cryptoSettings.name}
+                  onChange={e => setCurrencyConfig({...currencyConfig, cryptoSettings: { ...currencyConfig.cryptoSettings, name: e.target.value }})}
+                  className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg p-2.5 text-sm outline-none focus:border-archora-gold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm mb-2 text-gray-300">Crypto Rate (1 USD = X Crypto)</label>
+                <input 
+                  type="number"
+                  step="0.00000001"
+                  value={currencyConfig.rates.BTC}
+                  onChange={e => setCurrencyConfig({...currencyConfig, rates: { ...currencyConfig.rates, BTC: parseFloat(e.target.value) || 0 }})}
+                  className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg p-2.5 text-sm outline-none focus:border-archora-gold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm mb-2 text-gray-300">Crypto Symbol</label>
+                <input 
+                  type="text"
+                  value={currencyConfig.cryptoSettings.symbol}
+                  onChange={e => setCurrencyConfig({...currencyConfig, cryptoSettings: { ...currencyConfig.cryptoSettings, symbol: e.target.value }})}
+                  className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg p-2.5 text-sm outline-none focus:border-archora-gold"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm mb-2 text-gray-300">Wallet Address (Optional)</label>
+                <input 
+                  type="text"
+                  value={currencyConfig.cryptoSettings.walletAddress || ''}
+                  onChange={e => setCurrencyConfig({...currencyConfig, cryptoSettings: { ...currencyConfig.cryptoSettings, walletAddress: e.target.value }})}
+                  className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg p-2.5 text-sm outline-none focus:border-archora-gold"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="frosted-glass-white-card rounded-2xl p-6 md:p-8 shadow-2xl text-white">
             <h2 className="font-display text-2xl mb-6">Menu Items (Hamburger)</h2>
             <div className="space-y-4">
               {menuItems.map((item, i) => (
@@ -839,7 +911,6 @@ export const AdminView = () => {
                       <label className="block text-xs uppercase tracking-widest text-gray-300 mb-1">Category *</label>
                       <select value={pCategory} onChange={e=>setPCategory(e.target.value)} className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg px-3 py-2 text-sm focus:border-archora-gold outline-none">
                         <option value="New Arrivals" className="bg-[#141414] text-white">New Arrivals</option>
-                        <option value="Best Seller" className="bg-[#141414] text-white">Best Seller</option>
                         <option value="Sale" className="bg-[#141414] text-white">Sale</option>
                         <option value="Office Use Pro" className="bg-[#141414] text-white">Office Use Pro</option>
                         <option value="Decor" className="bg-[#141414] text-white">Decor</option>
