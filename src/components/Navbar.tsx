@@ -12,9 +12,10 @@ export const Navbar = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  const { cart, wishlist, currentUser, setCurrentUser, layoutConfig, setLayoutConfig, setCurrentView, currencyConfig, setCurrencyConfig, menuItems } = useAppContext();
+  const { cart, wishlist, currentUser, setCurrentUser, layoutConfig, setLayoutConfig, setCurrentView, currencyConfig, setCurrencyConfig, menuItems, orders } = useAppContext();
   const navigate = useNavigate();
   const cartItemsCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const loyaltyPoints = currentUser ? Math.floor(orders.filter(o => o.customerInfo.email === currentUser.email).reduce((acc, order) => acc + order.total, 0) / 100) : 0;
   
   const profileRef = useRef<HTMLDivElement>(null);
   const currencyRef = useRef<HTMLDivElement>(null);
@@ -65,20 +66,12 @@ export const Navbar = () => {
         <span className="font-display text-3xl md:text-4xl tracking-[0.1em] text-[#D4AF37]" style={{ textShadow: "0px 1px 1px rgba(0,0,0,0.1)" }}>{logoConfig.text}</span>
       ) : (
         <img 
-          src={logoConfig.imageUrl || '/1787550151155-removebg-preview.png'} 
+          src="/1787550151155-removebg-preview.png" 
           alt={logoConfig.text || 'ARCHORA'} 
           className="object-contain transition-all duration-300 drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)] hover:opacity-95 cursor-pointer" 
           style={{ 
             width: layoutConfig.logoSettings.width ? `${layoutConfig.logoSettings.width}px` : 'auto', 
             height: typeof window !== 'undefined' && window.innerWidth < 768 ? `${layoutConfig.logoSettings.mobileHeight || 36}px` : `${layoutConfig.logoSettings.desktopHeight || 44}px` 
-          }}
-          onError={(e) => {
-            const target = e.currentTarget;
-            if (target.src.endsWith('1787550151155-removebg-preview.png')) {
-              target.src = '/logo.png';
-            } else if (target.src.endsWith('logo.png')) {
-              target.src = '/logo.svg';
-            }
           }}
         />
       )}
@@ -259,10 +252,14 @@ export const Navbar = () => {
               <div className="relative" ref={profileRef}>
                 <button 
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="hover:text-archora-gold transition-colors text-white border-none bg-transparent m-0 p-0 shadow-none flex items-center gap-1" 
+                  className="hover:text-archora-gold transition-colors text-white border-none bg-transparent m-0 p-0 shadow-none flex items-center gap-1 md:gap-2" 
                   title="My Profile"
                 >
                   <User className="w-6 h-6 md:w-7 md:h-7 text-archora-gold" strokeWidth={1.5} />
+                  <div className="hidden sm:flex flex-col items-start text-left">
+                    <span className="text-[10px] text-gray-400 uppercase tracking-widest leading-none -mb-0.5">Pts</span>
+                    <span className="text-xs font-semibold text-archora-gold leading-none">{loyaltyPoints}</span>
+                  </div>
                 </button>
                 
                 {/* Dropdown Menu */}

@@ -446,6 +446,7 @@ export const AdminView = () => {
                 <th className="p-4 font-medium">Date Registered</th>
                 <th className="p-4 font-medium">Status</th>
                 <th className="p-4 font-medium">Total Spent</th>
+                <th className="p-4 font-medium">Loyalty Pts</th>
                 <th className="p-4 font-medium">Orders</th>
                 <th className="p-4 font-medium">Actions</th>
               </tr>
@@ -468,6 +469,7 @@ export const AdminView = () => {
                         </span>
                       </td>
                       <td className="p-4 font-medium text-white">{formatPrice(c.totalSpent)}</td>
+                      <td className="p-4 font-medium text-archora-gold">{Math.floor(c.totalSpent / 100)}</td>
                       <td className="p-4 text-sm text-gray-300">{c.orderCount}</td>
                       <td className="p-4">
                         <button 

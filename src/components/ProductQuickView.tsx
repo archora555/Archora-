@@ -25,7 +25,7 @@ export interface ProductQuickViewProps {
 }
 
 export const ProductQuickView: React.FC<ProductQuickViewProps> = ({ product, onClose }) => {
-  const { wishlist, toggleWishlist, addToCart, setCurrentView } = useAppContext();
+  const { wishlist, toggleWishlist, addToCart, clearCart, setCurrentView } = useAppContext();
   const { formatPrice } = useCurrency();
   const [currentImageIdx, setCurrentImageIdx] = useState(0);
   const [selectedColor, setSelectedColor] = useState(product.colors[0] || 'Default');
@@ -92,6 +92,7 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({ product, onC
   };
 
   const handleBuyNow = () => {
+    clearCart();
     addToCart(product, quantity, selectedColor);
     onClose();
     setCurrentView('checkout');
@@ -179,17 +180,17 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({ product, onC
                 <>
                   <button 
                     onClick={prevImg} 
-                    className="absolute left-3 top-1/2 -translate-y-1/2 bg-[#0e0e11]/85 hover:bg-[#1a1a1f] text-white p-2 rounded-full transition-all shadow-md cursor-pointer hover:scale-105 border border-white/20"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-2 transition-all drop-shadow-lg cursor-pointer hover:scale-110"
                     aria-label="Previous image"
                   >
-                    <ChevronLeft className="w-5 h-5 text-white" />
+                    <ChevronLeft className="w-8 h-8" />
                   </button>
                   <button 
                     onClick={nextImg} 
-                    className="absolute right-3 top-1/2 -translate-y-1/2 bg-[#0e0e11]/85 hover:bg-[#1a1a1f] text-white p-2 rounded-full transition-all shadow-md cursor-pointer hover:scale-105 border border-white/20"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-2 transition-all drop-shadow-lg cursor-pointer hover:scale-110"
                     aria-label="Next image"
                   >
-                    <ChevronRight className="w-5 h-5 text-white" />
+                    <ChevronRight className="w-8 h-8" />
                   </button>
                 </>
               )}
@@ -216,49 +217,7 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({ product, onC
               )}
             </div>
 
-            {/* Clickable Thumbnails Row */}
-            {product.images && product.images.length > 0 && (
-              <div className="p-3 frosted-glass-white-subtle border-t border-white/15 flex items-center gap-2.5 overflow-x-auto">
-                {product.images.map((img, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => {
-                      setCurrentImageIdx(idx);
-                      setShowARViewer(false);
-                    }}
-                    className={`relative w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all duration-200 cursor-pointer ${
-                      !showARViewer && currentImageIdx === idx 
-                        ? 'border-[#CFA344] ring-1 ring-[#CFA344]/50 shadow-sm scale-105 opacity-100' 
-                        : 'border-white/20 opacity-60 hover:opacity-100 hover:border-white/40'
-                    }`}
-                    aria-label={`View angle ${idx + 1}`}
-                  >
-                    <img 
-                      src={img} 
-                      alt={`${product.name} thumbnail ${idx + 1}`} 
-                      className="w-full h-full object-cover" 
-                    />
-                  </button>
-                ))}
-
-                {product.modelUrl && (
-                  <button
-                    type="button"
-                    onClick={() => setShowARViewer(true)}
-                    className={`relative w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all duration-200 flex flex-col items-center justify-center bg-white/10 cursor-pointer ${
-                      showARViewer 
-                        ? 'border-[#CFA344] ring-1 ring-[#CFA344]/50 shadow-sm scale-105 text-[#CFA344]' 
-                        : 'border-white/20 opacity-65 text-gray-400 hover:opacity-100 hover:border-white/40'
-                    }`}
-                    aria-label="View 3D Model"
-                  >
-                    <Box className="w-5 h-5" />
-                    <span className="text-[9px] uppercase font-bold tracking-wider mt-0.5">3D AR</span>
-                  </button>
-                )}
-              </div>
-            )}
+            {/* Product name now followed directly by thumbnails (removed from left column) */}
           </div>
 
           {/* Right Column: Details, Accordions, Actions */}
@@ -281,6 +240,50 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({ product, onC
             <h2 className="text-2xl sm:text-3xl font-display font-medium text-white mb-2 leading-snug">
               {product.name}
             </h2>
+
+            {/* Clickable Thumbnails Row */}
+            {product.images && product.images.length > 1 && (
+              <div className="flex gap-2 sm:gap-3 mb-4 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {product.images.map((img, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      setCurrentImageIdx(idx);
+                      setShowARViewer(false);
+                    }}
+                    className={`shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-md overflow-hidden border transition-all cursor-pointer ${
+                      !showARViewer && currentImageIdx === idx 
+                        ? 'border-[#CFA344] shadow-lg opacity-100 scale-105' 
+                        : 'border-white/10 opacity-60 hover:opacity-100 hover:border-white/30'
+                    }`}
+                    aria-label={`View angle ${idx + 1}`}
+                  >
+                    <img 
+                      src={img} 
+                      alt={`${product.name} thumbnail ${idx + 1}`} 
+                      className="w-full h-full object-cover" 
+                    />
+                  </button>
+                ))}
+
+                {product.modelUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setShowARViewer(true)}
+                    className={`shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-md overflow-hidden border transition-all flex flex-col items-center justify-center bg-white/10 cursor-pointer ${
+                      showARViewer 
+                        ? 'border-[#CFA344] shadow-lg scale-105 text-[#CFA344] opacity-100' 
+                        : 'border-white/10 opacity-65 text-gray-400 hover:opacity-100 hover:border-white/30'
+                    }`}
+                    aria-label="View 3D Model"
+                  >
+                    <Box className="w-5 h-5" />
+                    <span className="text-[9px] uppercase font-bold tracking-wider mt-0.5 hidden sm:block">3D AR</span>
+                  </button>
+                )}
+              </div>
+            )}
 
             <div className="flex items-center gap-4 mb-4">
               <p className="text-2xl font-light text-[#DFBA67]">
@@ -429,17 +432,17 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({ product, onC
             </div>
 
             {/* Quantity and Primary Cart Buttons */}
-            <div className="mt-auto pt-4 flex flex-col sm:flex-row gap-3">
+            <div className="mt-6 p-4 frosted-glass-white-card border border-white/10 rounded-xl flex flex-col sm:flex-row gap-3 shadow-xl relative z-10">
               <div className="flex items-center border border-white/20 rounded-lg frosted-glass-white-input">
                 <button 
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="px-3.5 py-2.5 hover:bg-white/10 transition-colors text-sm text-white"
+                  className="px-3.5 py-2.5 hover:bg-white/10 transition-colors text-sm text-white cursor-pointer"
                   aria-label="Decrease quantity"
                 >-</button>
                 <span className="w-10 text-center font-medium text-sm text-white">{quantity}</span>
                 <button 
                   onClick={() => setQuantity(Math.min(product.stockCount, quantity + 1))}
-                  className="px-3.5 py-2.5 hover:bg-white/10 transition-colors text-sm text-white"
+                  className="px-3.5 py-2.5 hover:bg-white/10 transition-colors text-sm text-white cursor-pointer"
                   disabled={quantity >= product.stockCount}
                   aria-label="Increase quantity"
                 >+</button>
@@ -449,7 +452,7 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({ product, onC
                 onClick={handleAddToCart}
                 disabled={!product.inStock}
                 className={`flex-1 py-2.5 px-5 uppercase tracking-widest text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-                  added ? 'bg-emerald-600 text-white' : 'bg-white/10 text-white hover:bg-white/20 border border-white/15'
+                  added ? 'bg-emerald-600 text-white shadow-lg' : 'bg-white/10 text-white hover:bg-white/20 border border-white/15'
                 } disabled:opacity-50`}
               >
                 {added ? <span className="flex items-center justify-center gap-1.5"><Check className="w-4 h-4"/> Added to Cart</span> : 'Add to Cart'}
@@ -458,7 +461,7 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({ product, onC
               <button 
                 onClick={handleBuyNow}
                 disabled={!product.inStock}
-                className="flex-1 bg-archora-gold text-black hover:bg-[#E5C762] transition-colors py-2.5 px-5 uppercase tracking-widest text-xs font-semibold rounded-lg disabled:opacity-50 cursor-pointer shadow-md"
+                className="flex-1 bg-archora-gold text-black hover:bg-[#E5C762] transition-colors py-2.5 px-5 uppercase tracking-widest text-xs font-semibold rounded-lg disabled:opacity-50 cursor-pointer shadow-lg"
               >
                 Buy Now
               </button>

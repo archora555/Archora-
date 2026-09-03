@@ -14,13 +14,11 @@ export const CheckoutView = () => {
     firstName: '',
     lastName: '',
     email: '',
+    phone: '',
     address: '',
     city: '',
     zip: '',
-    country: 'United States',
-    cardNumber: '',
-    exp: '',
-    cvc: ''
+    paymentMethod: 'bKash'
   });
 
   const [couponCode, setCouponCode] = useState(appliedCoupon ? appliedCoupon.code : '');
@@ -53,7 +51,10 @@ export const CheckoutView = () => {
   };
 
   const subtotal = cart.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
-  const shipping = subtotal > 5000 ? 0 : 250;
+  
+  // Shipping charge based on city (Inside Dhaka: 60, Outside: 120)
+  const isDhaka = formData.city.trim().toLowerCase() === 'dhaka';
+  const shipping = formData.city ? (isDhaka ? 60 : 120) : 0;
   
   let discountAmount = 0;
   if (appliedCoupon) {
@@ -79,7 +80,9 @@ export const CheckoutView = () => {
       customerInfo: {
         name: `${formData.firstName} ${formData.lastName}`,
         email: formData.email,
-        address: `${formData.address}, ${formData.city}, ${formData.country} ${formData.zip}`
+        phone: formData.phone,
+        address: `${formData.address}, ${formData.city}, Bangladesh ${formData.zip}`,
+        paymentMethod: formData.paymentMethod
       }
     };
 
@@ -128,7 +131,7 @@ export const CheckoutView = () => {
   return (
     <div className="w-full pt-32 pb-24 px-4 md:px-6 max-w-7xl mx-auto min-h-screen">
       <div className="frosted-glass-white-card rounded-2xl p-6 md:p-8 mb-8 shadow-2xl">
-        <h1 className="font-display text-4xl md:text-5xl text-white">Checkout</h1>
+        <h1 className="font-display text-4xl md:text-5xl text-archora-gold">Checkout</h1>
       </div>
       
       <div className="flex flex-col lg:flex-row gap-8">
@@ -140,31 +143,34 @@ export const CheckoutView = () => {
               <input required type="text" name="firstName" placeholder="First Name" onChange={handleChange} className="col-span-1 frosted-glass-white-input rounded-lg p-4 text-white placeholder:text-gray-400 focus:border-archora-gold focus:outline-none" />
               <input required type="text" name="lastName" placeholder="Last Name" onChange={handleChange} className="col-span-1 frosted-glass-white-input rounded-lg p-4 text-white placeholder:text-gray-400 focus:border-archora-gold focus:outline-none" />
               <input required type="email" name="email" placeholder="Email Address" onChange={handleChange} className="col-span-2 frosted-glass-white-input rounded-lg p-4 text-white placeholder:text-gray-400 focus:border-archora-gold focus:outline-none" />
+              <input required type="tel" name="phone" placeholder="Mobile Number" onChange={handleChange} className="col-span-2 frosted-glass-white-input rounded-lg p-4 text-white placeholder:text-gray-400 focus:border-archora-gold focus:outline-none" />
             </div>
           </section>
 
           <section className="frosted-glass-white-card rounded-2xl p-6 md:p-8 shadow-2xl">
-            <h2 className="font-display text-2xl mb-6 text-white">Delivery Address</h2>
+            <h2 className="font-display text-2xl mb-6 text-white">Delivery Address (Bangladesh)</h2>
             <div className="grid grid-cols-2 gap-4">
               <input required type="text" name="address" placeholder="Address" onChange={handleChange} className="col-span-2 frosted-glass-white-input rounded-lg p-4 text-white placeholder:text-gray-400 focus:border-archora-gold focus:outline-none" />
-              <input required type="text" name="city" placeholder="City" onChange={handleChange} className="col-span-2 sm:col-span-1 frosted-glass-white-input rounded-lg p-4 text-white placeholder:text-gray-400 focus:border-archora-gold focus:outline-none" />
+              <input required type="text" name="city" placeholder="City (e.g. Dhaka)" onChange={handleChange} className="col-span-2 sm:col-span-1 frosted-glass-white-input rounded-lg p-4 text-white placeholder:text-gray-400 focus:border-archora-gold focus:outline-none" />
               <input required type="text" name="zip" placeholder="Postal Code" onChange={handleChange} className="col-span-2 sm:col-span-1 frosted-glass-white-input rounded-lg p-4 text-white placeholder:text-gray-400 focus:border-archora-gold focus:outline-none" />
-              <select required name="country" onChange={handleChange} className="col-span-2 frosted-glass-white-input rounded-lg p-4 focus:border-archora-gold focus:outline-none text-white [&>option]:bg-[#121212] [&>option]:text-white">
-                <option value="United States">United States</option>
-                <option value="United Kingdom">United Kingdom</option>
-                <option value="Canada">Canada</option>
-                <option value="Australia">Australia</option>
-                <option value="France">France</option>
-              </select>
             </div>
           </section>
 
           <section className="frosted-glass-white-card rounded-2xl p-6 md:p-8 shadow-2xl">
             <h2 className="font-display text-2xl mb-6 text-white">Payment Method</h2>
-            <div className="grid grid-cols-4 gap-4 p-6 border border-white/15 rounded-xl frosted-glass-white-subtle">
-              <input required type="text" name="cardNumber" placeholder="Card Number" onChange={handleChange} className="col-span-4 frosted-glass-white-input rounded-lg p-4 text-white placeholder:text-gray-400 focus:border-archora-gold focus:outline-none" />
-              <input required type="text" name="exp" placeholder="MM/YY" onChange={handleChange} className="col-span-2 frosted-glass-white-input rounded-lg p-4 text-white placeholder:text-gray-400 focus:border-archora-gold focus:outline-none" />
-              <input required type="text" name="cvc" placeholder="CVC" onChange={handleChange} className="col-span-2 frosted-glass-white-input rounded-lg p-4 text-white placeholder:text-gray-400 focus:border-archora-gold focus:outline-none" />
+            <div className="flex flex-col gap-4 p-6 border border-white/15 rounded-xl frosted-glass-white-subtle">
+              <label className="flex items-center gap-3 text-white cursor-pointer group">
+                <input type="radio" name="paymentMethod" value="bKash" onChange={handleChange} checked={formData.paymentMethod === 'bKash'} className="accent-archora-gold w-5 h-5 cursor-pointer" />
+                <span className="font-medium group-hover:text-archora-gold transition-colors">bKash</span>
+              </label>
+              <label className="flex items-center gap-3 text-white cursor-pointer group">
+                <input type="radio" name="paymentMethod" value="Nagad" onChange={handleChange} checked={formData.paymentMethod === 'Nagad'} className="accent-archora-gold w-5 h-5 cursor-pointer" />
+                <span className="font-medium group-hover:text-archora-gold transition-colors">Nagad</span>
+              </label>
+              <label className="flex items-center gap-3 text-white cursor-pointer group">
+                <input type="radio" name="paymentMethod" value="Other Online Payment" onChange={handleChange} checked={formData.paymentMethod === 'Other Online Payment'} className="accent-archora-gold w-5 h-5 cursor-pointer" />
+                <span className="font-medium group-hover:text-archora-gold transition-colors">Other Local Online Payment</span>
+              </label>
             </div>
           </section>
 

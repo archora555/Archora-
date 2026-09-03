@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAppContext } from '../context/AppContext';
-import { User, Package, Heart, LogOut } from 'lucide-react';
+import { User, Package, Heart, LogOut, Crown, CheckCircle2, ChevronRight } from 'lucide-react';
 import { useCurrency } from '../hooks/useCurrency';
 
 export const ProfileView = () => {
@@ -19,6 +19,13 @@ export const ProfileView = () => {
   }
 
   const userOrders = orders.filter(o => o.customerInfo.email === currentUser.email);
+
+  const totalSpent = userOrders.reduce((sum, order) => sum + order.total, 0);
+  const loyaltyPoints = Math.floor(totalSpent / 100);
+  const GOLD_THRESHOLD = 150000;
+  const progress = Math.min((totalSpent / GOLD_THRESHOLD) * 100, 100);
+  const isGold = totalSpent >= GOLD_THRESHOLD;
+  const amountToGold = Math.max(0, GOLD_THRESHOLD - totalSpent);
 
   return (
     <div className="pt-32 pb-16 min-h-screen max-w-7xl mx-auto px-4 md:px-6">
@@ -73,6 +80,70 @@ export const ProfileView = () => {
         {/* Quick Stats & Recent Orders */}
         <div className="lg:col-span-2 space-y-8">
           
+          {/* Luxury Rewards Module */}
+          <div className="frosted-glass-white-card rounded-2xl p-6 md:p-8 shadow-2xl overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-archora-gold/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
+            
+            <div className="flex flex-col md:flex-row gap-8 items-start md:items-center justify-between mb-8 relative z-10">
+              <div className="flex items-center gap-4">
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center border-2 transition-colors ${isGold ? 'bg-archora-gold/20 border-archora-gold' : 'bg-white/5 border-white/20'}`}>
+                  <Crown className={`w-8 h-8 ${isGold ? 'text-archora-gold' : 'text-gray-400'}`} />
+                </div>
+                <div>
+                  <p className="text-sm text-archora-gold uppercase tracking-widest font-semibold mb-1">Luxury Rewards</p>
+                  <h2 className="font-display text-2xl md:text-3xl text-white">
+                    {isGold ? 'Gold Member' : 'Silver Member'}
+                  </h2>
+                </div>
+              </div>
+              <div className="flex gap-8 text-left md:text-right w-full md:w-auto">
+                <div>
+                  <p className="text-sm text-gray-400 mb-1">Loyalty Points</p>
+                  <p className="font-display text-3xl text-archora-gold">{loyaltyPoints}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-400 mb-1">Lifetime Spent</p>
+                  <p className="font-display text-3xl text-white">{formatPrice(totalSpent)}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-8 relative z-10">
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-gray-300 font-medium">Status Progress</span>
+                <span className={isGold ? 'text-archora-gold font-medium' : 'text-gray-400'}>
+                  {isGold ? 'Goal Reached' : `${formatPrice(amountToGold)} to Gold`}
+                </span>
+              </div>
+              <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden border border-white/5">
+                <div 
+                  className="h-full bg-gradient-to-r from-[#CFA344]/50 to-[#CFA344] rounded-full transition-all duration-1000 ease-out relative"
+                  style={{ width: `${progress}%` }}
+                >
+                  <div className="absolute top-0 right-0 w-2 h-full bg-white/50 blur-[2px]" />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-white/10 pt-8 relative z-10">
+              <div className="flex flex-col items-center text-center p-4 rounded-xl frosted-glass-white-subtle border border-white/5">
+                <CheckCircle2 className={`w-6 h-6 mb-3 ${isGold ? 'text-archora-gold' : 'text-gray-500'}`} />
+                <h4 className={`text-sm font-semibold mb-1 ${isGold ? 'text-white' : 'text-gray-400'}`}>White-Glove Delivery</h4>
+                <p className="text-xs text-gray-500 leading-relaxed">Free premium delivery & assembly on all orders.</p>
+              </div>
+              <div className="flex flex-col items-center text-center p-4 rounded-xl frosted-glass-white-subtle border border-white/5">
+                <CheckCircle2 className={`w-6 h-6 mb-3 ${isGold ? 'text-archora-gold' : 'text-gray-500'}`} />
+                <h4 className={`text-sm font-semibold mb-1 ${isGold ? 'text-white' : 'text-gray-400'}`}>Exclusive Pre-Sales</h4>
+                <p className="text-xs text-gray-500 leading-relaxed">Early access to limited collections and private events.</p>
+              </div>
+              <div className="flex flex-col items-center text-center p-4 rounded-xl frosted-glass-white-subtle border border-white/5">
+                <CheckCircle2 className={`w-6 h-6 mb-3 ${isGold ? 'text-archora-gold' : 'text-gray-500'}`} />
+                <h4 className={`text-sm font-semibold mb-1 ${isGold ? 'text-white' : 'text-gray-400'}`}>Dedicated Concierge</h4>
+                <p className="text-xs text-gray-500 leading-relaxed">Priority 24/7 access to our interior design specialists.</p>
+              </div>
+            </div>
+          </div>
+
           {/* Quick Stats */}
           <div className="grid grid-cols-2 gap-6">
             <div 

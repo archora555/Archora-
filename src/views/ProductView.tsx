@@ -10,7 +10,7 @@ import { useCurrency } from '../hooks/useCurrency';
 export const ProductView = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { products, wishlist, toggleWishlist, addToCart, setCurrentView } = useAppContext();
+  const { products, wishlist, toggleWishlist, addToCart, clearCart, setCurrentView } = useAppContext();
   const { formatPrice } = useCurrency();
   
   const product = products.find(p => p.id === id);
@@ -53,6 +53,7 @@ export const ProductView = () => {
   };
 
   const handleBuyNow = () => {
+    clearCart();
     addToCart(product, quantity, selectedColor);
     navigate('/');
     setCurrentView('checkout');
@@ -64,7 +65,7 @@ export const ProductView = () => {
     .slice(0, 4);
 
   return (
-    <div className="w-full pt-32 pb-24 px-4 md:px-6 max-w-7xl mx-auto min-h-screen">
+    <div className="w-full pt-12 md:pt-16 pb-24 px-4 md:px-6 max-w-7xl mx-auto min-h-screen">
       <div className="frosted-glass-white-card rounded-2xl p-6 md:p-10 shadow-2xl mb-12">
         <div className="flex flex-col md:flex-row gap-8 md:gap-16">
           
@@ -126,11 +127,11 @@ export const ProductView = () => {
             
             {!showARViewer && product.images.length > 1 && (
               <>
-                <button onClick={prevImg} className="absolute left-4 top-1/2 -translate-y-1/2 bg-[#0e0e11]/85 hover:bg-[#1a1a1f] text-white p-2 transition-colors shadow-md rounded-full border border-white/20 cursor-pointer" aria-label="Previous image">
-                  <ChevronLeft className="w-5 h-5" />
+                <button onClick={prevImg} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-2 transition-all drop-shadow-lg cursor-pointer hover:scale-110" aria-label="Previous image">
+                  <ChevronLeft className="w-8 h-8" />
                 </button>
-                <button onClick={nextImg} className="absolute right-4 top-1/2 -translate-y-1/2 bg-[#0e0e11]/85 hover:bg-[#1a1a1f] text-white p-2 transition-colors shadow-md rounded-full border border-white/20 cursor-pointer" aria-label="Next image">
-                  <ChevronRight className="w-5 h-5" />
+                <button onClick={nextImg} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-2 transition-all drop-shadow-lg cursor-pointer hover:scale-110" aria-label="Next image">
+                  <ChevronRight className="w-8 h-8" />
                 </button>
               </>
             )}
@@ -163,6 +164,24 @@ export const ProductView = () => {
             </div>
             
             <h1 className="text-3xl md:text-5xl font-display font-medium text-white mb-4 leading-tight">{product.name}</h1>
+            
+            {/* Thumbnail Gallery */}
+            {product.images.length > 1 && (
+              <div className="flex gap-2 sm:gap-3 mb-6 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {product.images.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentImageIdx(idx)}
+                    className={`shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-md overflow-hidden border transition-all cursor-pointer ${
+                      currentImageIdx === idx ? 'border-archora-gold shadow-lg opacity-100 scale-105' : 'border-white/10 opacity-60 hover:opacity-100 hover:border-white/30'
+                    }`}
+                  >
+                    <img src={img} alt={`${product.name} view ${idx + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+
             <p className="text-2xl font-light text-[#DFBA67] mb-6">{formatPrice(product.price)}</p>
             
             <p className="text-gray-300 mb-8 leading-relaxed text-sm md:text-base">
@@ -235,16 +254,16 @@ export const ProductView = () => {
               </div>
             )}
 
-            <div className="mt-auto pt-6 flex flex-col sm:flex-row gap-4 sticky bottom-4 z-50 frosted-glass-white-header md:static md:bg-transparent md:backdrop-blur-none md:border-none rounded-xl p-2 md:p-0">
-              <div className="flex items-center border border-white/20 frosted-glass-white-input rounded-lg overflow-hidden">
+            <div className="mt-8 p-4 sm:p-6 frosted-glass-white-card border border-white/10 flex flex-col sm:flex-row gap-4 rounded-xl relative z-10 shadow-xl">
+              <div className="flex items-center border border-white/20 frosted-glass-white-input rounded-lg overflow-hidden shrink-0">
                 <button 
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="px-4 py-3 hover:bg-white/10 text-white transition-colors"
+                  className="px-4 py-3 hover:bg-white/10 text-white transition-colors cursor-pointer"
                 >-</button>
                 <span className="w-12 text-center font-medium text-white">{quantity}</span>
                 <button 
                   onClick={() => setQuantity(Math.min(product.stockCount, quantity + 1))}
-                  className="px-4 py-3 hover:bg-white/10 text-white transition-colors"
+                  className="px-4 py-3 hover:bg-white/10 text-white transition-colors cursor-pointer"
                   disabled={quantity >= product.stockCount}
                 >+</button>
               </div>
@@ -252,7 +271,7 @@ export const ProductView = () => {
               <button 
                 onClick={handleAddToCart}
                 disabled={!product.inStock}
-                className={`flex-1 py-3 px-6 uppercase tracking-widest text-sm font-medium rounded-lg transition-all ${
+                className={`flex-1 py-3 px-6 uppercase tracking-widest text-sm font-medium rounded-lg transition-all cursor-pointer ${
                   added ? 'bg-green-600 text-white shadow-lg' : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
                 } disabled:opacity-50`}
               >
@@ -262,7 +281,7 @@ export const ProductView = () => {
               <button 
                 onClick={handleBuyNow}
                 disabled={!product.inStock}
-                className="flex-1 bg-archora-gold text-black hover:bg-[#E5C762] transition-colors py-3 px-6 uppercase tracking-widest text-sm font-semibold rounded-lg disabled:opacity-50 shadow-lg"
+                className="flex-1 bg-archora-gold text-black hover:bg-[#E5C762] transition-colors py-3 px-6 uppercase tracking-widest text-sm font-semibold rounded-lg disabled:opacity-50 shadow-lg cursor-pointer"
               >
                 Buy Now
               </button>
