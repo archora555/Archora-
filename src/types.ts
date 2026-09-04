@@ -10,6 +10,7 @@ export interface Product {
   modelUrl?: string;
   dimensions?: string;
   colors: string[];
+  colorImages?: Record<string, string[]>;
   sizes?: string[];
   inStock: boolean;
   stockCount: number;

@@ -24,7 +24,7 @@ export const BuilderPalette = () => {
   };
 
   return (
-    <div className="fixed top-20 left-4 w-64 bg-[#0e0e0e]/95 shadow-[0_20px_50px_rgba(0,0,0,0.6)] rounded-2xl border border-white/20 z-[99999] flex flex-col max-h-[80vh] overflow-hidden text-white">
+    <div className="fixed bottom-24 md:bottom-auto md:top-20 left-4 right-4 md:right-auto md:w-64 bg-[#1a1a1a] shadow-[0_20px_50px_rgba(0,0,0,0.6)] rounded-2xl border border-white/10 z-[99998] flex flex-col max-h-[35vh] md:max-h-[80vh] overflow-hidden text-white">
       <div className="p-3 border-b border-white/10 bg-white/5 font-semibold text-sm text-archora-gold flex items-center gap-2">
         <PlusSquare className="w-4 h-4" /> Add Component
       </div>

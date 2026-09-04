@@ -239,11 +239,6 @@ export const AdminLoginView = () => {
         <div className="absolute inset-0 rounded-[24px] opacity-[0.15] mix-blend-overlay pointer-events-none" style={{ backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.03) 2px, rgba(255,255,255,0.03) 4px, rgba(0,0,0,0.02) 4px, rgba(0,0,0,0.02) 6px)` }}></div>
         <div className="absolute inset-0 rounded-[24px] opacity-[0.1] mix-blend-overlay pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")` }}></div>
 
-        {/* Brand Logo */}
-        <div className="mb-6 flex justify-center relative z-10">
-          <ArchoraLogo height={38} className="h-9 w-auto object-contain drop-shadow-[0_2px_10px_rgba(0,0,0,0.3)]" />
-        </div>
-
         {/* Avatar Icon (Recessed) */}
         <div className="relative w-[88px] h-[88px] rounded-full bg-gradient-to-b from-[#a37722] to-[#d4af5e] shadow-[inset_4px_6px_10px_rgba(60,30,0,0.9),inset_-2px_-2px_6px_rgba(255,230,150,0.6),0_1px_2px_rgba(255,255,255,0.6)] border border-[#8b651b]/30 flex items-center justify-center mb-8">
           <User className="w-10 h-10 text-[#5A4210] drop-shadow-[0_1px_0_rgba(255,255,255,0.3)]" strokeWidth={1} fill="none" />

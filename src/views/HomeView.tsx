@@ -66,7 +66,13 @@ export const HomeView = () => {
                     onTextChange={(t) => setLayoutConfig({...layoutConfig, footerSettings: {...layoutConfig.footerSettings, title: t}})}
                   >
                     <div className="mb-6 flex items-center">
-                      <ArchoraLogo height={42} className="h-10 md:h-12 w-auto object-contain cursor-pointer" />
+                      {logoConfig.type === 'text' && logoConfig.text && logoConfig.text !== 'ARCHORA' ? (
+                        <span className="font-display text-2xl tracking-[0.1em] text-[#D4AF37]">{logoConfig.text}</span>
+                      ) : logoConfig.imageUrl && logoConfig.imageUrl !== '/logo.svg' && logoConfig.imageUrl !== '/1788428927791.png' ? (
+                        <img src={logoConfig.imageUrl} alt="ARCHORA" className="h-10 md:h-12 w-auto object-contain cursor-pointer max-w-full" />
+                      ) : (
+                        <ArchoraLogo height={42} className="h-10 md:h-12 w-auto object-contain cursor-pointer" />
+                      )}
                     </div>
                   </EditableWrapper>
                   

@@ -7,7 +7,7 @@ import { ArchoraLogo } from '../components/ArchoraLogo';
 import { useCurrency } from '../hooks/useCurrency';
 
 export const CheckoutView = () => {
-  const { cart, clearCart, addOrder, setCurrentView, appliedCoupon, setAppliedCoupon } = useAppContext();
+  const { cart, clearCart, addOrder, setCurrentView, appliedCoupon, setAppliedCoupon, logoConfig } = useAppContext();
   const { formatPrice } = useCurrency();
   const [isSuccess, setIsSuccess] = useState(false);
   const [formData, setFormData] = useState({
@@ -101,7 +101,13 @@ export const CheckoutView = () => {
       <div className="w-full pt-40 pb-24 px-6 max-w-3xl mx-auto min-h-screen text-center flex flex-col items-center">
         <div className="frosted-glass-white-card rounded-2xl p-10 max-w-xl w-full shadow-2xl">
           <div className="mb-6 flex justify-center">
-            <ArchoraLogo height={36} className="h-9 w-auto object-contain" />
+            {logoConfig.type === 'text' && logoConfig.text && logoConfig.text !== 'ARCHORA' ? (
+              <span className="font-display text-2xl tracking-[0.1em] text-[#D4AF37]">{logoConfig.text}</span>
+            ) : logoConfig.imageUrl && logoConfig.imageUrl !== '/logo.svg' && logoConfig.imageUrl !== '/1788428927791.png' ? (
+              <img src={logoConfig.imageUrl} alt="ARCHORA" className="h-14 w-auto object-contain max-w-full" />
+            ) : (
+              <ArchoraLogo height={36} className="h-14 w-auto object-contain max-w-full" />
+            )}
           </div>
           <motion.div 
             initial={{ scale: 0, opacity: 0 }}

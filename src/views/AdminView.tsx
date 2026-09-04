@@ -8,7 +8,7 @@ import { DEFAULT_SHADER_PARAMS, SilkShaderParams, SHADER_PRESETS } from '../comp
 import { ArchoraLogo } from '../components/ArchoraLogo';
 import { useCurrency } from '../hooks/useCurrency';
 
-const compressImage = (file: File, maxSize: number = 1000): Promise<string> => {
+const compressImage = (file: File, maxSize: number = 1000, preserveTransparency: boolean = false): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -35,7 +35,8 @@ const compressImage = (file: File, maxSize: number = 1000): Promise<string> => {
         const ctx = canvas.getContext('2d');
         if (ctx) {
           ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.8));
+          const outType = (preserveTransparency || (file.type && file.type.includes('png')) || (file.type && file.type.includes('webp'))) ? 'image/png' : 'image/jpeg';
+          resolve(canvas.toDataURL(outType, 0.8));
         } else {
           resolve(event.target?.result as string);
         }
@@ -107,6 +108,7 @@ export const AdminView = () => {
   const [pModelUrl, setPModelUrl] = useState('');
   const [pDimensions, setPDimensions] = useState('');
   const [pColors, setPColors] = useState<string[]>([]);
+  const [pColorImages, setPColorImages] = useState<Record<string, string[]>>({});
   const [pSizes, setPSizes] = useState<string[]>([]);
   const [pInStock, setPInStock] = useState(true);
   const [pStockCount, setPStockCount] = useState(1);
@@ -162,6 +164,7 @@ export const AdminView = () => {
     setPModelUrl('');
     setPDimensions('');
     setPColors(['#FFFFFF', '#111111']);
+    setPColorImages({});
     setPSizes(['Standard']);
     setPInStock(true);
     setPStockCount(10);
@@ -180,6 +183,7 @@ export const AdminView = () => {
     setPModelUrl(prod.modelUrl || '');
     setPDimensions(prod.dimensions || '');
     setPColors([...prod.colors]);
+    setPColorImages(prod.colorImages ? { ...prod.colorImages } : {});
     setPSizes(prod.sizes || []);
     setPInStock(prod.inStock);
     setPStockCount(prod.stockCount);
@@ -206,6 +210,7 @@ export const AdminView = () => {
       modelUrl: pModelUrl,
       dimensions: pDimensions,
       colors: pColors.filter(c => c.trim() !== ''),
+      colorImages: pColorImages,
       sizes: pSizes.filter(s => s.trim() !== ''),
       inStock: pInStock,
       stockCount: Number(pStockCount),
@@ -224,7 +229,7 @@ export const AdminView = () => {
   if (isAuthChecking) {
     return (
       <div className="w-full min-h-screen flex items-center justify-center px-4 pt-20">
-        <div className="frosted-glass-white-card p-8 rounded-2xl shadow-2xl">
+        <div className="bg-[#1a1a1a] border border-white/10 p-8 rounded-2xl shadow-2xl">
           <p className="text-gray-300 uppercase tracking-widest text-xs font-semibold">Verifying secure connection...</p>
         </div>
       </div>
@@ -232,7 +237,7 @@ export const AdminView = () => {
   }
 
   const StatCard = ({ title, value, icon: Icon }: any) => (
-    <div className="frosted-glass-white-card p-6 flex items-center justify-between shadow-2xl rounded-2xl">
+    <div className="bg-[#1a1a1a] border border-white/10 p-6 flex items-center justify-between shadow-2xl rounded-2xl">
       <div>
         <p className="text-xs text-gray-400 uppercase tracking-widest mb-2">{title}</p>
         <p className="font-display text-3xl font-medium text-white">{value}</p>
@@ -245,11 +250,17 @@ export const AdminView = () => {
 
   return (
     <div className="w-full pt-32 pb-24 px-4 md:px-8 max-w-[1440px] mx-auto min-h-screen">
-      <div className="frosted-glass-white-card rounded-2xl p-6 md:p-8 mb-8 shadow-2xl">
+      <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 md:p-8 mb-8 shadow-2xl">
         <div className="flex flex-col md:flex-row md:justify-between md:items-end border-b border-white/10 pb-6 gap-4">
           <div>
             <div className="mb-3">
-              <ArchoraLogo height={32} className="h-8 w-auto object-contain" />
+              {logoConfig.type === 'text' && logoConfig.text && logoConfig.text !== 'ARCHORA' ? (
+                <span className="font-display text-2xl tracking-[0.1em] text-[#D4AF37]">{logoConfig.text}</span>
+              ) : logoConfig.imageUrl && logoConfig.imageUrl !== '/logo.svg' && logoConfig.imageUrl !== '/1788428927791.png' ? (
+                <img src={logoConfig.imageUrl} alt="ARCHORA" className="h-12 w-auto object-contain max-w-full" />
+              ) : (
+                <ArchoraLogo height={32} className="h-12 w-auto object-contain max-w-full" />
+              )}
             </div>
             <h1 className="font-display text-4xl mb-2 text-white">Command Center</h1>
             <p className="text-gray-400 tracking-wide">Manage your luxury boutique operations directly connected to the live catalog.</p>
@@ -284,7 +295,7 @@ export const AdminView = () => {
             <StatCard title="Catalog Size" value={products.length} icon={Package} />
           </div>
           
-          <div className="frosted-glass-white-card p-6 md:p-8 shadow-2xl rounded-2xl">
+          <div className="bg-[#1a1a1a] border border-white/10 p-6 md:p-8 shadow-2xl rounded-2xl">
             <h3 className="font-display text-xl mb-6 text-white">Recent Activity</h3>
             {orders.length > 0 ? (
               <div className="space-y-4">
@@ -309,11 +320,11 @@ export const AdminView = () => {
       )}
 
       {activeTab === 'products' && (
-        <div className="frosted-glass-white-card rounded-2xl shadow-2xl overflow-hidden">
+        <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
           <div className="p-4 md:p-6 border-b border-white/10 flex flex-col sm:flex-row justify-between items-start md:items-center gap-4 bg-white/5">
             <div className="relative w-full max-w-sm">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input type="text" placeholder="Search product catalog..." className="w-full pl-10 pr-4 py-2.5 text-sm border border-white/15 focus:border-archora-gold focus:outline-none frosted-glass-white-input text-white placeholder-gray-400 rounded-lg" />
+              <input type="text" placeholder="Search product catalog..." className="w-full pl-10 pr-4 py-2.5 text-sm border border-white/15 focus:border-archora-gold focus:outline-none bg-[#0f0f0f] border-white/20 text-white placeholder-gray-400 rounded-lg" />
             </div>
             <button 
               onClick={openAddProduct}
@@ -384,7 +395,7 @@ export const AdminView = () => {
       )}
 
       {activeTab === 'orders' && (
-        <div className="frosted-glass-white-card rounded-2xl shadow-2xl overflow-x-auto">
+        <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl shadow-2xl overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[800px]">
             <thead>
               <tr className="bg-white/5 border-b border-white/10 text-xs uppercase tracking-widest text-gray-400">
@@ -413,7 +424,7 @@ export const AdminView = () => {
                         onChange={(e) => {
                            setOrders(prev => prev.map(o => o.id === order.id ? {...o, status: e.target.value as any} : o));
                         }}
-                        className="frosted-glass-white-input text-white px-2.5 py-1 text-[10px] uppercase tracking-wider font-semibold border border-white/15 rounded-md outline-none"
+                        className="bg-[#0f0f0f] border-white/20 text-white px-2.5 py-1 text-[10px] uppercase tracking-wider font-semibold border border-white/15 rounded-md outline-none"
                       >
                         <option value="Pending" className="bg-[#141414] text-white">Pending</option>
                         <option value="Processing" className="bg-[#141414] text-white">Processing</option>
@@ -437,7 +448,7 @@ export const AdminView = () => {
       )}
 
       {activeTab === 'customers' && (
-        <div className="frosted-glass-white-card rounded-2xl shadow-2xl overflow-x-auto">
+        <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl shadow-2xl overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[1000px]">
             <thead>
               <tr className="bg-white/5 border-b border-white/10 text-xs uppercase tracking-widest text-gray-400">
@@ -495,7 +506,7 @@ export const AdminView = () => {
 
       {activeTab === 'banners' && (
         <div className="space-y-8">
-          <div className="flex justify-end p-4 frosted-glass-white-card rounded-2xl shadow-sm sticky top-[100px] z-20">
+          <div className="flex justify-end p-4 bg-[#1a1a1a] border border-white/10 rounded-2xl shadow-sm sticky top-[100px] z-20">
             <button 
               onClick={handleSaveConfig}
               disabled={isSavingConfig}
@@ -505,11 +516,11 @@ export const AdminView = () => {
             </button>
           </div>
 
-          <div className="frosted-glass-white-card rounded-2xl p-6 md:p-8 shadow-2xl text-white">
+          <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl text-white">
             <h2 className="font-display text-2xl mb-6 flex items-center gap-3"><Image className="text-archora-gold w-6 h-6"/> Homepage Hero Banners</h2>
             <div className="space-y-4">
               {heroBanners.map((banner, i) => (
-                <div key={i} className="flex gap-4 items-center frosted-glass-white-subtle p-4 border border-white/10 rounded-xl">
+                <div key={i} className="flex gap-4 items-center bg-[#222222] border border-white/5 p-4 border border-white/10 rounded-xl">
                   <img src={banner.image || undefined} className="w-24 h-16 object-cover border border-white/10 rounded-lg" alt="Banner" />
                   <div className="flex-1 space-y-2">
                      <input 
@@ -521,7 +532,7 @@ export const AdminView = () => {
                          setHeroBanners(nb);
                        }}
                        placeholder="Banner Title" 
-                       className="w-full text-sm border border-white/15 frosted-glass-white-input text-white rounded-lg p-2.5 outline-none focus:border-archora-gold" 
+                       className="w-full text-sm border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg p-2.5 outline-none focus:border-archora-gold" 
                      />
                      <input 
                        type="file" 
@@ -535,7 +546,7 @@ export const AdminView = () => {
                            setHeroBanners(nb);
                          }
                        }}
-                       className="w-full text-xs border border-white/15 frosted-glass-white-input text-gray-300 rounded-lg p-2 file:bg-white/10 file:text-white file:border-0 file:rounded file:px-2 file:py-1 file:mr-2" 
+                       className="w-full text-xs border border-white/15 bg-[#0f0f0f] border-white/20 text-gray-300 rounded-lg p-2 file:bg-white/10 file:text-white file:border-0 file:rounded file:px-2 file:py-1 file:mr-2" 
                      />
                   </div>
                   <button onClick={() => setHeroBanners(heroBanners.filter((_, idx) => idx !== i))} className="text-red-400 hover:bg-red-500/20 p-2 rounded-lg transition-colors cursor-pointer">
@@ -555,7 +566,7 @@ export const AdminView = () => {
 
       {activeTab === 'categories' && (
         <div className="space-y-8">
-          <div className="flex justify-end p-4 frosted-glass-white-card rounded-2xl shadow-sm sticky top-[100px] z-20">
+          <div className="flex justify-end p-4 bg-[#1a1a1a] border border-white/10 rounded-2xl shadow-sm sticky top-[100px] z-20">
             <button 
               onClick={handleSaveConfig}
               disabled={isSavingConfig}
@@ -565,12 +576,12 @@ export const AdminView = () => {
             </button>
           </div>
 
-          <div className="frosted-glass-white-card rounded-2xl p-6 md:p-8 shadow-2xl text-white">
+          <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl text-white">
             <h2 className="font-display text-2xl mb-6 flex items-center gap-3"><Plus className="text-archora-gold w-6 h-6"/> Homepage Sub-Categories</h2>
             <p className="text-xs text-gray-400 mb-4">Icon names must match Lucide-React icon names (e.g., 'Sofa', 'BedDouble', 'Lamp')</p>
             <div className="space-y-4">
               {subCategories.map((cat, i) => (
-                <div key={i} className="flex gap-4 items-center frosted-glass-white-subtle p-4 border border-white/10 rounded-xl">
+                <div key={i} className="flex gap-4 items-center bg-[#222222] border border-white/5 p-4 border border-white/10 rounded-xl">
                   <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
                      <input 
                        type="text" 
@@ -581,7 +592,7 @@ export const AdminView = () => {
                          setSubCategories(n);
                        }}
                        placeholder="Category Name" 
-                       className="w-full text-sm border border-white/15 frosted-glass-white-input text-white rounded-lg p-2.5 outline-none focus:border-archora-gold" 
+                       className="w-full text-sm border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg p-2.5 outline-none focus:border-archora-gold" 
                      />
                      <input 
                        type="text" 
@@ -592,7 +603,7 @@ export const AdminView = () => {
                          setSubCategories(n);
                        }}
                        placeholder="Icon Name (e.g. Sofa)" 
-                       className="w-full text-sm border border-white/15 frosted-glass-white-input text-white rounded-lg p-2.5 outline-none focus:border-archora-gold" 
+                       className="w-full text-sm border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg p-2.5 outline-none focus:border-archora-gold" 
                      />
                      <div className="flex flex-col gap-2">
                        {cat.image && <img src={cat.image} className="h-10 w-10 object-cover border border-white/10 rounded-lg" alt="Preview" />}
@@ -608,7 +619,7 @@ export const AdminView = () => {
                              setSubCategories(n);
                            }
                          }}
-                         className="w-full text-xs border border-white/15 frosted-glass-white-input text-gray-300 rounded-lg p-2 file:bg-white/10 file:text-white file:border-0 file:rounded file:px-2 file:py-1 file:mr-2" 
+                         className="w-full text-xs border border-white/15 bg-[#0f0f0f] border-white/20 text-gray-300 rounded-lg p-2 file:bg-white/10 file:text-white file:border-0 file:rounded file:px-2 file:py-1 file:mr-2" 
                        />
                      </div>
                   </div>
@@ -629,7 +640,7 @@ export const AdminView = () => {
 
       {activeTab === 'product-rows' && (
         <div className="space-y-8">
-          <div className="flex justify-end p-4 frosted-glass-white-card rounded-2xl shadow-sm sticky top-[100px] z-20">
+          <div className="flex justify-end p-4 bg-[#1a1a1a] border border-white/10 rounded-2xl shadow-sm sticky top-[100px] z-20">
             <button 
               onClick={handleSaveConfig}
               disabled={isSavingConfig}
@@ -639,11 +650,11 @@ export const AdminView = () => {
             </button>
           </div>
 
-          <div className="frosted-glass-white-card rounded-2xl p-6 md:p-8 shadow-2xl text-white">
+          <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl text-white">
             <h2 className="font-display text-2xl mb-6 flex items-center gap-3"><Plus className="text-archora-gold w-6 h-6"/> Homepage Row Names</h2>
             <div className="space-y-4">
               {homeSections.map((sec, i) => (
-                <div key={i} className="flex gap-4 items-center frosted-glass-white-subtle p-4 border border-white/10 rounded-xl">
+                <div key={i} className="flex gap-4 items-center bg-[#222222] border border-white/5 p-4 border border-white/10 rounded-xl">
                   <div className="flex-1 grid grid-cols-2 gap-4">
                      <input 
                        type="text" 
@@ -654,7 +665,7 @@ export const AdminView = () => {
                          setHomeSections(n);
                        }}
                        placeholder="Section Title" 
-                       className="w-full text-sm border border-white/15 frosted-glass-white-input text-white rounded-lg p-2.5 outline-none focus:border-archora-gold" 
+                       className="w-full text-sm border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg p-2.5 outline-none focus:border-archora-gold" 
                      />
                      <input 
                        type="text" 
@@ -665,7 +676,7 @@ export const AdminView = () => {
                          setHomeSections(n);
                        }}
                        placeholder="Filter by Category" 
-                       className="w-full text-sm border border-white/15 frosted-glass-white-input text-white rounded-lg p-2.5 outline-none focus:border-archora-gold" 
+                       className="w-full text-sm border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg p-2.5 outline-none focus:border-archora-gold" 
                      />
                   </div>
                   <button onClick={() => setHomeSections(homeSections.filter((_, idx) => idx !== i))} className="text-red-400 hover:bg-red-500/20 p-2 rounded-lg transition-colors cursor-pointer">
@@ -693,7 +704,7 @@ export const AdminView = () => {
 
       {activeTab === 'settings' && (
         <div className="space-y-8">
-          <div className="flex justify-end p-4 frosted-glass-white-card rounded-2xl shadow-sm sticky top-[100px] z-20">
+          <div className="flex justify-end p-4 bg-[#1a1a1a] border border-white/10 rounded-2xl shadow-sm sticky top-[100px] z-20">
             <button 
               onClick={handleSaveConfig}
               disabled={isSavingConfig}
@@ -703,7 +714,7 @@ export const AdminView = () => {
             </button>
           </div>
 
-          <div className="frosted-glass-white-card rounded-2xl p-6 md:p-8 shadow-2xl text-white">
+          <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl text-white">
             <h2 className="font-display text-2xl mb-6">Logo Configuration</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
@@ -711,7 +722,7 @@ export const AdminView = () => {
                 <select 
                   value={logoConfig.type} 
                   onChange={e => setLogoConfig({...logoConfig, type: e.target.value as 'text' | 'image'})}
-                  className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg p-2.5 text-sm max-w-xs outline-none focus:border-archora-gold"
+                  className="w-full border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg p-2.5 text-sm max-w-xs outline-none focus:border-archora-gold"
                 >
                   <option value="text" className="bg-[#141414] text-white">Text</option>
                   <option value="image" className="bg-[#141414] text-white">Image</option>
@@ -725,7 +736,7 @@ export const AdminView = () => {
                     type="text" 
                     value={logoConfig.text} 
                     onChange={e => setLogoConfig({...logoConfig, text: e.target.value})}
-                    className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg p-2.5 text-sm outline-none focus:border-archora-gold" 
+                    className="w-full border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg p-2.5 text-sm outline-none focus:border-archora-gold" 
                   />
                 </div>
               )}
@@ -735,13 +746,13 @@ export const AdminView = () => {
                   <label className="block text-sm mb-2 text-gray-300">Logo Image</label>
                   <div className="flex flex-col gap-2">
                     {logoConfig.imageUrl ? (
-                      <img src={logoConfig.imageUrl} className="h-12 w-auto object-contain frosted-glass-white-subtle p-2 border border-white/10 rounded-lg" alt="Logo Preview" />
+                      <img src={logoConfig.imageUrl} className="h-12 w-auto object-contain bg-[#222222] border border-white/5 p-2 border border-white/10 rounded-lg" alt="Logo Preview" />
                     ) : (
-                      <img src="/1787550151155-removebg-preview.png" className="h-12 w-auto object-contain frosted-glass-white-subtle p-2 border border-white/10 rounded-lg" alt="Logo Preview" />
+                      <img src="/logo.svg" className="h-12 w-auto object-contain bg-[#222222] border border-white/5 p-2 border border-white/10 rounded-lg" alt="Logo Preview" />
                     )}
                     <button
                       type="button"
-                      onClick={() => setLogoConfig({ ...logoConfig, type: 'image', imageUrl: '/1787550151155-removebg-preview.png' })}
+                      onClick={() => setLogoConfig({ ...logoConfig, type: 'image', imageUrl: '/logo.svg' })}
                       className="px-3 py-1.5 bg-archora-gold/20 text-archora-gold border border-archora-gold/40 text-xs rounded-lg hover:bg-archora-gold/30 transition-colors self-start"
                     >
                       Use Official Gold Logo
@@ -756,7 +767,7 @@ export const AdminView = () => {
                           setLogoConfig({...logoConfig, imageUrl: compressed});
                         }
                       }}
-                      className="w-full border border-white/15 frosted-glass-white-input text-gray-300 rounded-lg p-2 text-sm file:bg-white/10 file:text-white file:border-0 file:rounded file:px-2 file:py-1 file:mr-2"
+                      className="w-full border border-white/15 bg-[#0f0f0f] border-white/20 text-gray-300 rounded-lg p-2 text-sm file:bg-white/10 file:text-white file:border-0 file:rounded file:px-2 file:py-1 file:mr-2"
                     />
                   </div>
                 </div>
@@ -764,7 +775,7 @@ export const AdminView = () => {
             </div>
           </div>
 
-          <div className="frosted-glass-white-card rounded-2xl p-6 md:p-8 shadow-2xl text-white">
+          <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl text-white">
             <h2 className="font-display text-2xl mb-6">Currency Configuration</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
@@ -772,7 +783,7 @@ export const AdminView = () => {
                 <select 
                   value={currencyConfig.defaultCurrency} 
                   onChange={e => setCurrencyConfig({...currencyConfig, defaultCurrency: e.target.value as any, activeCurrency: e.target.value as any})}
-                  className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg p-2.5 text-sm outline-none focus:border-archora-gold"
+                  className="w-full border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg p-2.5 text-sm outline-none focus:border-archora-gold"
                 >
                   <option value="USD" className="bg-[#141414] text-white">USD</option>
                   <option value="BDT" className="bg-[#141414] text-white">BDT</option>
@@ -787,7 +798,7 @@ export const AdminView = () => {
                   step="0.01"
                   value={currencyConfig.rates.BDT}
                   onChange={e => setCurrencyConfig({...currencyConfig, rates: { ...currencyConfig.rates, BDT: parseFloat(e.target.value) || 0 }})}
-                  className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg p-2.5 text-sm outline-none focus:border-archora-gold"
+                  className="w-full border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg p-2.5 text-sm outline-none focus:border-archora-gold"
                 />
               </div>
 
@@ -797,7 +808,7 @@ export const AdminView = () => {
                   type="text"
                   value={currencyConfig.cryptoSettings.name}
                   onChange={e => setCurrencyConfig({...currencyConfig, cryptoSettings: { ...currencyConfig.cryptoSettings, name: e.target.value }})}
-                  className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg p-2.5 text-sm outline-none focus:border-archora-gold"
+                  className="w-full border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg p-2.5 text-sm outline-none focus:border-archora-gold"
                 />
               </div>
 
@@ -808,7 +819,7 @@ export const AdminView = () => {
                   step="0.00000001"
                   value={currencyConfig.rates.BTC}
                   onChange={e => setCurrencyConfig({...currencyConfig, rates: { ...currencyConfig.rates, BTC: parseFloat(e.target.value) || 0 }})}
-                  className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg p-2.5 text-sm outline-none focus:border-archora-gold"
+                  className="w-full border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg p-2.5 text-sm outline-none focus:border-archora-gold"
                 />
               </div>
 
@@ -818,7 +829,7 @@ export const AdminView = () => {
                   type="text"
                   value={currencyConfig.cryptoSettings.symbol}
                   onChange={e => setCurrencyConfig({...currencyConfig, cryptoSettings: { ...currencyConfig.cryptoSettings, symbol: e.target.value }})}
-                  className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg p-2.5 text-sm outline-none focus:border-archora-gold"
+                  className="w-full border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg p-2.5 text-sm outline-none focus:border-archora-gold"
                 />
               </div>
               
@@ -828,17 +839,17 @@ export const AdminView = () => {
                   type="text"
                   value={currencyConfig.cryptoSettings.walletAddress || ''}
                   onChange={e => setCurrencyConfig({...currencyConfig, cryptoSettings: { ...currencyConfig.cryptoSettings, walletAddress: e.target.value }})}
-                  className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg p-2.5 text-sm outline-none focus:border-archora-gold"
+                  className="w-full border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg p-2.5 text-sm outline-none focus:border-archora-gold"
                 />
               </div>
             </div>
           </div>
 
-          <div className="frosted-glass-white-card rounded-2xl p-6 md:p-8 shadow-2xl text-white">
+          <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl text-white">
             <h2 className="font-display text-2xl mb-6">Menu Items (Hamburger)</h2>
             <div className="space-y-4">
               {menuItems.map((item, i) => (
-                <div key={item.id} className="flex gap-4 items-center frosted-glass-white-subtle p-4 border border-white/10 rounded-xl">
+                <div key={item.id} className="flex gap-4 items-center bg-[#222222] border border-white/5 p-4 border border-white/10 rounded-xl">
                   <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
                      <input 
                        type="text" 
@@ -849,7 +860,7 @@ export const AdminView = () => {
                          setMenuItems(n);
                        }}
                        placeholder="Menu Label" 
-                       className="w-full text-sm border border-white/15 frosted-glass-white-input text-white rounded-lg p-2.5 outline-none focus:border-archora-gold" 
+                       className="w-full text-sm border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg p-2.5 outline-none focus:border-archora-gold" 
                      />
                      <select 
                        value={item.action} 
@@ -858,7 +869,7 @@ export const AdminView = () => {
                          n[i] = { ...n[i], action: e.target.value };
                          setMenuItems(n);
                        }}
-                       className="w-full text-sm border border-white/15 frosted-glass-white-input text-white rounded-lg p-2.5 outline-none focus:border-archora-gold" 
+                       className="w-full text-sm border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg p-2.5 outline-none focus:border-archora-gold" 
                      >
                        <option value="home" className="bg-[#141414] text-white">Home</option>
                        <option value="shop" className="bg-[#141414] text-white">Shop</option>
@@ -884,9 +895,9 @@ export const AdminView = () => {
 
       {/* Product Management Modal */}
       {isProductModalOpen && (
-        <div className="fixed inset-0 frosted-glass-white-backdrop z-[100] flex items-center justify-center p-4">
-          <div className="frosted-glass-white-card border border-white/20 w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative rounded-2xl text-white">
-            <div className="sticky top-0 frosted-glass-white-header border-b border-white/10 px-6 py-4 flex justify-between items-center z-10">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+          <div className="bg-[#1a1a1a] border border-white/10 border border-white/20 w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative rounded-2xl text-white">
+            <div className="sticky top-0 bg-[#1a1a1a] border-b border-white/10 px-6 py-4 flex justify-between items-center z-10">
               <h2 className="font-display text-2xl text-white">{editingProduct ? 'Edit Product' : 'Add New Product'}</h2>
               <button onClick={() => setIsProductModalOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white cursor-pointer">
                 <X className="w-5 h-5" />
@@ -901,17 +912,17 @@ export const AdminView = () => {
                   
                   <div>
                     <label className="block text-xs uppercase tracking-widest text-gray-300 mb-1">Product Name *</label>
-                    <input type="text" value={pName} onChange={e=>setPName(e.target.value)} required className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg px-3 py-2 text-sm focus:border-archora-gold outline-none" />
+                    <input type="text" value={pName} onChange={e=>setPName(e.target.value)} required className="w-full border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg px-3 py-2 text-sm focus:border-archora-gold outline-none" />
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs uppercase tracking-widest text-gray-300 mb-1">Price ($) *</label>
-                      <input type="number" value={pPrice} onChange={e=>setPPrice(Number(e.target.value))} required className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg px-3 py-2 text-sm focus:border-archora-gold outline-none" min="0" step="0.01" />
+                      <input type="number" value={pPrice} onChange={e=>setPPrice(Number(e.target.value))} required className="w-full border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg px-3 py-2 text-sm focus:border-archora-gold outline-none" min="0" step="0.01" />
                     </div>
                     <div>
                       <label className="block text-xs uppercase tracking-widest text-gray-300 mb-1">Category *</label>
-                      <select value={pCategory} onChange={e=>setPCategory(e.target.value)} className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg px-3 py-2 text-sm focus:border-archora-gold outline-none">
+                      <select value={pCategory} onChange={e=>setPCategory(e.target.value)} className="w-full border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg px-3 py-2 text-sm focus:border-archora-gold outline-none">
                         <option value="New Arrivals" className="bg-[#141414] text-white">New Arrivals</option>
                         <option value="Sale" className="bg-[#141414] text-white">Sale</option>
                         <option value="Office Use Pro" className="bg-[#141414] text-white">Office Use Pro</option>
@@ -926,22 +937,22 @@ export const AdminView = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs uppercase tracking-widest text-gray-300 mb-1">Sub Category (Optional)</label>
-                      <input type="text" value={pSubCategory} onChange={e=>setPSubCategory(e.target.value)} className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg px-3 py-2 text-sm focus:border-archora-gold outline-none" placeholder="e.g. Chairs" />
+                      <input type="text" value={pSubCategory} onChange={e=>setPSubCategory(e.target.value)} className="w-full border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg px-3 py-2 text-sm focus:border-archora-gold outline-none" placeholder="e.g. Chairs" />
                     </div>
                     <div>
                       <label className="block text-xs uppercase tracking-widest text-gray-300 mb-1">Materials (Optional)</label>
-                      <input type="text" value={pMaterials} onChange={e=>setPMaterials(e.target.value)} className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg px-3 py-2 text-sm focus:border-archora-gold outline-none" placeholder="e.g. Oak Wood, Leather" />
+                      <input type="text" value={pMaterials} onChange={e=>setPMaterials(e.target.value)} className="w-full border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg px-3 py-2 text-sm focus:border-archora-gold outline-none" placeholder="e.g. Oak Wood, Leather" />
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-xs uppercase tracking-widest text-gray-300 mb-1">Description *</label>
-                    <textarea value={pDesc} onChange={e=>setPDesc(e.target.value)} required rows={4} className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg px-3 py-2 text-sm focus:border-archora-gold outline-none resize-none" />
+                    <textarea value={pDesc} onChange={e=>setPDesc(e.target.value)} required rows={4} className="w-full border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg px-3 py-2 text-sm focus:border-archora-gold outline-none resize-none" />
                   </div>
 
                   <div>
                     <label className="block text-xs uppercase tracking-widest text-gray-300 mb-1">Dimensions</label>
-                    <input type="text" value={pDimensions} onChange={e=>setPDimensions(e.target.value)} placeholder="e.g. 88W x 38D x 34H" className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg px-3 py-2 text-sm focus:border-archora-gold outline-none" />
+                    <input type="text" value={pDimensions} onChange={e=>setPDimensions(e.target.value)} placeholder="e.g. 88W x 38D x 34H" className="w-full border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg px-3 py-2 text-sm focus:border-archora-gold outline-none" />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -953,7 +964,7 @@ export const AdminView = () => {
                     </div>
                     <div>
                       <label className="block text-xs uppercase tracking-widest text-gray-300 mb-1">Stock Count</label>
-                      <input type="number" value={pStockCount} onChange={e=>setPStockCount(Number(e.target.value))} required className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg px-3 py-2 text-sm focus:border-archora-gold outline-none" min="0" />
+                      <input type="number" value={pStockCount} onChange={e=>setPStockCount(Number(e.target.value))} required className="w-full border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg px-3 py-2 text-sm focus:border-archora-gold outline-none" min="0" />
                     </div>
                   </div>
                 </div>
@@ -996,7 +1007,7 @@ export const AdminView = () => {
                          });
                          setPImages(newUrls);
                       }} 
-                      className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg px-3 py-2 text-sm focus:border-archora-gold outline-none font-mono text-xs" 
+                      className="w-full border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg px-3 py-2 text-sm focus:border-archora-gold outline-none font-mono text-xs" 
                       rows={3} 
                       placeholder="https://image1.jpg, https://image2.jpg"
                     />
@@ -1015,7 +1026,7 @@ export const AdminView = () => {
                                     newArr[i] = newArr[i-1];
                                     newArr[i-1] = temp;
                                     return newArr;
-                                  })} className="frosted-glass-white-btn rounded shadow text-white w-5 h-5 flex items-center justify-center font-bold text-xs cursor-pointer">←</button>
+                                  })} className="bg-[#2a2a2a] hover:bg-[#333333] border-white/20 rounded shadow text-white w-5 h-5 flex items-center justify-center font-bold text-xs cursor-pointer">←</button>
                                 )}
                                 {i < arr.length - 1 && (
                                   <button type="button" onClick={() => setPImages(prev => {
@@ -1024,7 +1035,7 @@ export const AdminView = () => {
                                     newArr[i] = newArr[i+1];
                                     newArr[i+1] = temp;
                                     return newArr;
-                                  })} className="frosted-glass-white-btn rounded shadow text-white w-5 h-5 flex items-center justify-center font-bold text-xs cursor-pointer">→</button>
+                                  })} className="bg-[#2a2a2a] hover:bg-[#333333] border-white/20 rounded shadow text-white w-5 h-5 flex items-center justify-center font-bold text-xs cursor-pointer">→</button>
                                 )}
                              </div>
                            </div>
@@ -1035,16 +1046,40 @@ export const AdminView = () => {
                   
                   <div>
                     <label className="block text-xs uppercase tracking-widest text-gray-300 mb-1">AR Model URL (.glb file) - Optional</label>
-                    <input type="url" value={pModelUrl} onChange={e=>setPModelUrl(e.target.value)} placeholder="https://..." className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg px-3 py-2 text-sm focus:border-archora-gold outline-none" />
+                    <input type="url" value={pModelUrl} onChange={e=>setPModelUrl(e.target.value)} placeholder="https://..." className="w-full border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg px-3 py-2 text-sm focus:border-archora-gold outline-none" />
                   </div>
 
                   <div>
                     <label className="block text-xs uppercase tracking-widest text-gray-300 mb-1">Color Variants (HEX codes, comma separated)</label>
-                    <input type="text" value={pColors.join(', ')} onChange={e=>setPColors(e.target.value.split(',').map(s=>s.trim()))} placeholder="#FFFFFF, #000000" className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg px-3 py-2 text-sm focus:border-archora-gold outline-none font-mono" />
+                    <input type="text" value={pColors.join(', ')} onChange={e=>setPColors(e.target.value.split(',').map(s=>s.trim()))} placeholder="#FFFFFF, #000000" className="w-full border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg px-3 py-2 text-sm focus:border-archora-gold outline-none font-mono" />
                     {pColors.length > 0 && pColors[0] !== "" && (
-                      <div className="flex gap-2 mt-2">
+                      <div className="flex flex-col gap-3 mt-3">
                         {pColors.map((c, i) => (
-                           <div key={i} className="w-6 h-6 border border-white/20 rounded-full" style={{backgroundColor: c}}></div>
+                           <div key={i} className="flex flex-col gap-2 p-3 bg-white/5 rounded-lg border border-white/10">
+                              <div className="flex items-center gap-3">
+                                 <div className="w-6 h-6 border border-white/20 rounded-full flex-shrink-0" style={{backgroundColor: c}}></div>
+                                 <span className="text-xs font-mono text-gray-300">{c}</span>
+                              </div>
+                              <div className="mt-1">
+                                 <label className="text-[10px] text-gray-400 uppercase tracking-widest mb-1 block">Images for this color (comma separated URLs)</label>
+                                 <textarea 
+                                    className="w-full border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg px-2 py-1 text-xs focus:border-archora-gold outline-none font-mono"
+                                    rows={2}
+                                    placeholder="Enter image URLs specific to this color..."
+                                    value={(pColorImages[c] || []).join(',\n')}
+                                    onChange={(e) => setPColorImages(prev => ({...prev, [c]: e.target.value.split(',').map(s => s.trim()).filter(s => s)}))}
+                                 />
+                                 {(pColorImages[c] || []).length === 0 && pImages.filter(img => img.trim() !== '').length > 0 && (
+                                    <button 
+                                      type="button" 
+                                      onClick={() => setPColorImages(prev => ({...prev, [c]: pImages.filter(img => img.trim() !== '')}))}
+                                      className="text-[10px] text-archora-gold hover:underline mt-1 cursor-pointer"
+                                    >
+                                      Copy Main Images Here
+                                    </button>
+                                 )}
+                              </div>
+                           </div>
                         ))}
                       </div>
                     )}
@@ -1052,7 +1087,7 @@ export const AdminView = () => {
                   
                   <div>
                     <label className="block text-xs uppercase tracking-widest text-gray-300 mb-1">Size Variants (comma separated)</label>
-                    <input type="text" value={pSizes.join(', ')} onChange={e=>setPSizes(e.target.value.split(',').map(s=>s.trim()))} placeholder="Standard, Large, King" className="w-full border border-white/15 frosted-glass-white-input text-white rounded-lg px-3 py-2 text-sm focus:border-archora-gold outline-none" />
+                    <input type="text" value={pSizes.join(', ')} onChange={e=>setPSizes(e.target.value.split(',').map(s=>s.trim()))} placeholder="Standard, Large, King" className="w-full border border-white/15 bg-[#0f0f0f] border-white/20 text-white rounded-lg px-3 py-2 text-sm focus:border-archora-gold outline-none" />
                   </div>
                 </div>
               </div>
@@ -1072,7 +1107,7 @@ export const AdminView = () => {
 
       {activeTab === 'layout' && ( <>
 
-      <div className="mt-8 frosted-glass-white-card border border-white/15 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 text-white shadow-2xl">
+      <div className="mt-8 bg-[#1a1a1a] border border-white/10 border border-white/15 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 text-white shadow-2xl">
         <div>
           <h3 className="font-semibold text-lg text-white mb-1">Visual Site Builder</h3>
           <p className="text-sm text-gray-300">Enter full-site drag-and-drop edit mode to design your storefront structure, typography, buttons, and layout.</p>
@@ -1098,7 +1133,7 @@ export const AdminView = () => {
                   setIsVisualEditMode(true);
                   navigate('/');
                 }}
-                className="frosted-glass-white-btn text-white px-4 py-2 rounded-lg font-medium transition-colors text-xs uppercase tracking-wider flex items-center gap-2 border border-white/15 cursor-pointer"
+                className="bg-[#2a2a2a] hover:bg-[#333333] border-white/20 text-white px-4 py-2 rounded-lg font-medium transition-colors text-xs uppercase tracking-wider flex items-center gap-2 border border-white/15 cursor-pointer"
               >
                 Visual Edit Mode
               </button>
@@ -1114,7 +1149,7 @@ export const AdminView = () => {
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* 1. Header & Navigation */}
-            <div className="frosted-glass-white-card p-6 border border-white/10 rounded-2xl shadow-2xl space-y-4 text-white">
+            <div className="bg-[#1a1a1a] border border-white/10 p-6 border border-white/10 rounded-2xl shadow-2xl space-y-4 text-white">
               <h3 className="font-bold text-sm uppercase tracking-widest text-archora-gold border-b border-white/10 pb-2">1. Header & Navigation</h3>
               
               <div>
@@ -1137,7 +1172,7 @@ export const AdminView = () => {
                       type="text" 
                       value={layoutConfig.announcementBar.text}
                       onChange={e => setLayoutConfig({...layoutConfig, announcementBar: {...layoutConfig.announcementBar, text: e.target.value}})}
-                      className="w-full border border-white/15 p-2.5 text-sm frosted-glass-white-input text-white rounded-lg outline-none focus:border-archora-gold"
+                      className="w-full border border-white/15 p-2.5 text-sm bg-[#0f0f0f] border-white/20 text-white rounded-lg outline-none focus:border-archora-gold"
                     />
                   </div>
                   <div className="grid grid-cols-3 gap-4">
@@ -1147,7 +1182,7 @@ export const AdminView = () => {
                         type="color" 
                         value={layoutConfig.announcementBar.bgColor}
                         onChange={e => setLayoutConfig({...layoutConfig, announcementBar: {...layoutConfig.announcementBar, bgColor: e.target.value}})}
-                        className="w-full h-9 cursor-pointer rounded-lg frosted-glass-white-subtle border border-white/15"
+                        className="w-full h-9 cursor-pointer rounded-lg bg-[#222222] border border-white/5 border border-white/15"
                       />
                     </div>
                     <div>
@@ -1156,7 +1191,7 @@ export const AdminView = () => {
                         type="color" 
                         value={layoutConfig.announcementBar.textColor}
                         onChange={e => setLayoutConfig({...layoutConfig, announcementBar: {...layoutConfig.announcementBar, textColor: e.target.value}})}
-                        className="w-full h-9 cursor-pointer rounded-lg frosted-glass-white-subtle border border-white/15"
+                        className="w-full h-9 cursor-pointer rounded-lg bg-[#222222] border border-white/5 border border-white/15"
                       />
                     </div>
                   </div>
@@ -1169,13 +1204,13 @@ export const AdminView = () => {
                   type="color" 
                   value={layoutConfig.header.bgColor}
                   onChange={e => setLayoutConfig({...layoutConfig, header: {...layoutConfig.header, bgColor: e.target.value}})}
-                  className="w-full h-9 cursor-pointer rounded-lg frosted-glass-white-subtle border border-white/15"
+                  className="w-full h-9 cursor-pointer rounded-lg bg-[#222222] border border-white/5 border border-white/15"
                 />
               </div>
             </div>
 
             {/* 2. Logo Configuration */}
-            <div className="frosted-glass-white-card p-6 border border-white/10 rounded-2xl shadow-2xl space-y-4 text-white">
+            <div className="bg-[#1a1a1a] border border-white/10 p-6 border border-white/10 rounded-2xl shadow-2xl space-y-4 text-white">
               <h3 className="font-bold text-sm uppercase tracking-widest text-archora-gold border-b border-white/10 pb-2">2. Logo Configuration</h3>
               
               <div className="flex items-center gap-4 mb-4">
@@ -1208,14 +1243,14 @@ export const AdminView = () => {
                     type="text" 
                     value={layoutConfig.logoSettings.text}
                     onChange={e => setLayoutConfig({...layoutConfig, logoSettings: {...layoutConfig.logoSettings, text: e.target.value}})}
-                    className="w-full border border-white/15 p-2.5 text-sm frosted-glass-white-input text-white rounded-lg outline-none focus:border-archora-gold"
+                    className="w-full border border-white/15 p-2.5 text-sm bg-[#0f0f0f] border-white/20 text-white rounded-lg outline-none focus:border-archora-gold"
                   />
                 </div>
               ) : (
                 <div className="space-y-4">
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="block text-xs uppercase tracking-widest text-gray-400">Image URL</label>
+                      <label className="block text-xs uppercase tracking-widest text-gray-400">Upload Image</label>
                       <button
                         type="button"
                         onClick={() => setLayoutConfig({
@@ -1223,7 +1258,7 @@ export const AdminView = () => {
                           logoSettings: {
                             ...layoutConfig.logoSettings,
                             type: 'image',
-                            imageUrl: '/1787550151155-removebg-preview.png'
+                            imageUrl: '/logo.svg'
                           }
                         })}
                         className="text-[11px] text-archora-gold hover:underline"
@@ -1232,11 +1267,23 @@ export const AdminView = () => {
                       </button>
                     </div>
                     <input 
-                      type="text" 
-                      value={layoutConfig.logoSettings.imageUrl}
-                      onChange={e => setLayoutConfig({...layoutConfig, logoSettings: {...layoutConfig.logoSettings, imageUrl: e.target.value}})}
-                      className="w-full border border-white/15 p-2.5 text-sm frosted-glass-white-input text-white rounded-lg outline-none focus:border-archora-gold"
-                      placeholder="https://..."
+                      type="file" 
+                      accept="image/*"
+                      onChange={async e => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          // Compress logo but preserve transparency to stay under Firestore 1MB limit
+                          const compressed = await compressImage(file, 800, true);
+                          setLayoutConfig({
+                            ...layoutConfig, 
+                            logoSettings: {
+                              ...layoutConfig.logoSettings, 
+                              imageUrl: compressed
+                            }
+                          });
+                        }
+                      }}
+                      className="w-full border border-white/15 bg-[#0f0f0f] border-white/20 text-gray-300 rounded-lg p-2 text-sm file:bg-white/10 file:text-white file:border-0 file:rounded file:px-2 file:py-1 file:mr-2"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -1244,7 +1291,7 @@ export const AdminView = () => {
                       <label className="block text-xs uppercase tracking-widest text-gray-400 mb-1">Mobile Height (px)</label>
                       <input 
                         type="range" 
-                        min="20" max="80" 
+                        min="20" max="120" 
                         value={layoutConfig.logoSettings.mobileHeight}
                         onChange={e => setLayoutConfig({...layoutConfig, logoSettings: {...layoutConfig.logoSettings, mobileHeight: Number(e.target.value)}})}
                         className="w-full accent-archora-gold"
@@ -1255,7 +1302,7 @@ export const AdminView = () => {
                       <label className="block text-xs uppercase tracking-widest text-gray-400 mb-1">Desktop Height (px)</label>
                       <input 
                         type="range" 
-                        min="24" max="100" 
+                        min="24" max="200" 
                         value={layoutConfig.logoSettings.desktopHeight}
                         onChange={e => setLayoutConfig({...layoutConfig, logoSettings: {...layoutConfig.logoSettings, desktopHeight: Number(e.target.value)}})}
                         className="w-full accent-archora-gold"
@@ -1268,7 +1315,7 @@ export const AdminView = () => {
             </div>
             
             {/* 3. Category Section Title Editor */}
-            <div className="frosted-glass-white-card p-6 border border-white/10 rounded-2xl shadow-2xl space-y-4 text-white">
+            <div className="bg-[#1a1a1a] border border-white/10 p-6 border border-white/10 rounded-2xl shadow-2xl space-y-4 text-white">
               <h3 className="font-bold text-sm uppercase tracking-widest text-archora-gold border-b border-white/10 pb-2">3. Category Section Title Editor</h3>
               
               <div>
@@ -1277,7 +1324,7 @@ export const AdminView = () => {
                   type="text" 
                   value={layoutConfig.categorySection.title}
                   onChange={e => setLayoutConfig({...layoutConfig, categorySection: {...layoutConfig.categorySection, title: e.target.value}})}
-                  className="w-full border border-white/15 p-2.5 text-sm frosted-glass-white-input text-white rounded-lg outline-none focus:border-archora-gold mb-3"
+                  className="w-full border border-white/15 p-2.5 text-sm bg-[#0f0f0f] border-white/20 text-white rounded-lg outline-none focus:border-archora-gold mb-3"
                 />
               </div>
               
@@ -1308,7 +1355,7 @@ export const AdminView = () => {
                   <label className="block text-xs uppercase tracking-widest text-gray-400 mb-1">Margin Top (px)</label>
                   <input 
                     type="range" 
-                    min="0" max="100" 
+                    min="0" max="200" 
                     value={layoutConfig.categorySection.marginTop}
                     onChange={e => setLayoutConfig({...layoutConfig, categorySection: {...layoutConfig.categorySection, marginTop: Number(e.target.value)}})}
                     className="w-full accent-archora-gold"
@@ -1319,7 +1366,7 @@ export const AdminView = () => {
                   <label className="block text-xs uppercase tracking-widest text-gray-400 mb-1">Margin Bottom (px)</label>
                   <input 
                     type="range" 
-                    min="0" max="100" 
+                    min="0" max="200" 
                     value={layoutConfig.categorySection.marginBottom}
                     onChange={e => setLayoutConfig({...layoutConfig, categorySection: {...layoutConfig.categorySection, marginBottom: Number(e.target.value)}})}
                     className="w-full accent-archora-gold"
@@ -1330,7 +1377,7 @@ export const AdminView = () => {
             </div>
 
             {/* 4. Dynamic Category Cards Manager */}
-            <div className="frosted-glass-white-card p-6 border border-white/10 rounded-2xl shadow-2xl space-y-4 text-white">
+            <div className="bg-[#1a1a1a] border border-white/10 p-6 border border-white/10 rounded-2xl shadow-2xl space-y-4 text-white">
               <h3 className="font-bold text-sm uppercase tracking-widest text-archora-gold border-b border-white/10 pb-2">4. Dynamic Category Cards Layout</h3>
               
               <div className="grid grid-cols-2 gap-4">
@@ -1383,7 +1430,7 @@ export const AdminView = () => {
                   <select 
                     value={layoutConfig.categoryCards.aspectRatio}
                     onChange={e => setLayoutConfig({...layoutConfig, categoryCards: {...layoutConfig.categoryCards, aspectRatio: e.target.value}})}
-                    className="w-full border border-white/15 p-2.5 text-sm frosted-glass-white-input text-white rounded-lg outline-none focus:border-archora-gold"
+                    className="w-full border border-white/15 p-2.5 text-sm bg-[#0f0f0f] border-white/20 text-white rounded-lg outline-none focus:border-archora-gold"
                   >
                     <option value="1/1" className="bg-[#141414] text-white">1:1 (Square)</option>
                     <option value="4/3" className="bg-[#141414] text-white">4:3 (Landscape)</option>
@@ -1406,7 +1453,7 @@ export const AdminView = () => {
             </div>
             
             {/* 5. WebGL Liquid Silk Wave Shader Background */}
-            <div className="lg:col-span-2 frosted-glass-white-card p-6 border border-archora-gold/30 rounded-2xl shadow-2xl space-y-6 text-white">
+            <div className="lg:col-span-2 bg-[#1a1a1a] border border-white/10 p-6 border border-archora-gold/30 rounded-2xl shadow-2xl space-y-6 text-white">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-lg bg-archora-gold/20 flex items-center justify-center text-archora-gold">
@@ -1441,7 +1488,7 @@ export const AdminView = () => {
                         setShaderParams(preset.params);
                         localStorage.setItem('archora_silk_shader_config', JSON.stringify(preset.params));
                       }}
-                      className="p-3 rounded-xl frosted-glass-white-subtle hover:bg-archora-gold/15 border border-white/10 hover:border-archora-gold/50 text-left transition-all cursor-pointer group"
+                      className="p-3 rounded-xl bg-[#222222] border border-white/5 hover:bg-archora-gold/15 border border-white/10 hover:border-archora-gold/50 text-left transition-all cursor-pointer group"
                     >
                       <div className="font-semibold text-sm text-gray-200 group-hover:text-archora-gold">{preset.label}</div>
                       <div className="text-[11px] text-gray-400 mt-1 leading-tight">{preset.desc}</div>
@@ -1632,13 +1679,13 @@ const QuotesAdminTab = () => {
   };
 
   if (loading) return <div className="p-8 text-center text-gray-400">Loading quotes...</div>;
-  if (quotes.length === 0) return <div className="p-8 text-center text-gray-400 frosted-glass-white-card rounded-2xl">No quotes received yet.</div>;
+  if (quotes.length === 0) return <div className="p-8 text-center text-gray-400 bg-[#1a1a1a] border border-white/10 rounded-2xl">No quotes received yet.</div>;
 
   return (
     <div className="space-y-6 text-white">
       <h2 className="font-display text-2xl mb-6 text-white">Custom Quote Requests</h2>
       {quotes.map(quote => (
-        <div key={quote.id} className="frosted-glass-white-card p-6 border border-white/10 rounded-2xl shadow-2xl flex flex-col md:flex-row gap-6">
+        <div key={quote.id} className="bg-[#1a1a1a] border border-white/10 p-6 border border-white/10 rounded-2xl shadow-2xl flex flex-col md:flex-row gap-6">
           <div className="flex-1">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-display text-xl text-white">{quote.productName}</h3>
@@ -1653,7 +1700,7 @@ const QuotesAdminTab = () => {
             </div>
             
             {quote.notes && (
-              <div className="frosted-glass-white-subtle p-4 text-sm text-gray-300 italic border-l-2 border-archora-gold rounded-r-lg">
+              <div className="bg-[#222222] border border-white/5 p-4 text-sm text-gray-300 italic border-l-2 border-archora-gold rounded-r-lg">
                 "{quote.notes}"
               </div>
             )}
@@ -1764,25 +1811,25 @@ const CouponsAdminTab = () => {
       </div>
 
       {showAdd && (
-        <form onSubmit={handleAdd} className="frosted-glass-white-card p-6 border border-white/15 rounded-2xl shadow-2xl flex flex-col md:flex-row gap-4 items-end mb-8 relative z-10 text-white">
+        <form onSubmit={handleAdd} className="bg-[#1a1a1a] border border-white/10 p-6 border border-white/15 rounded-2xl shadow-2xl flex flex-col md:flex-row gap-4 items-end mb-8 relative z-10 text-white">
            <div className="flex-1 w-full">
              <label className="text-xs uppercase tracking-widest text-gray-400 block mb-1">Coupon Code</label>
-             <input required type="text" className="w-full border border-white/15 p-2.5 text-sm frosted-glass-white-input text-white rounded-lg uppercase outline-none focus:border-archora-gold" value={newCoupon.code} onChange={e=>setNewCoupon({...newCoupon, code: e.target.value.toUpperCase()})} placeholder="e.g. SUMMER20" />
+             <input required type="text" className="w-full border border-white/15 p-2.5 text-sm bg-[#0f0f0f] border-white/20 text-white rounded-lg uppercase outline-none focus:border-archora-gold" value={newCoupon.code} onChange={e=>setNewCoupon({...newCoupon, code: e.target.value.toUpperCase()})} placeholder="e.g. SUMMER20" />
            </div>
            <div className="w-full md:w-36">
              <label className="text-xs uppercase tracking-widest text-gray-400 block mb-1">Type</label>
-             <select className="w-full border border-white/15 p-2.5 text-sm frosted-glass-white-input text-white rounded-lg outline-none focus:border-archora-gold" value={newCoupon.type} onChange={e=>setNewCoupon({...newCoupon, type: e.target.value})}>
+             <select className="w-full border border-white/15 p-2.5 text-sm bg-[#0f0f0f] border-white/20 text-white rounded-lg outline-none focus:border-archora-gold" value={newCoupon.type} onChange={e=>setNewCoupon({...newCoupon, type: e.target.value})}>
                <option value="percentage" className="bg-[#141414] text-white">Percentage %</option>
                <option value="fixed" className="bg-[#141414] text-white">Fixed Amount $</option>
              </select>
            </div>
            <div className="w-full md:w-32">
              <label className="text-xs uppercase tracking-widest text-gray-400 block mb-1">Value</label>
-             <input required type="number" min="1" className="w-full border border-white/15 p-2.5 text-sm frosted-glass-white-input text-white rounded-lg outline-none focus:border-archora-gold" value={newCoupon.value} onChange={e=>setNewCoupon({...newCoupon, value: e.target.value as any})} />
+             <input required type="number" min="1" className="w-full border border-white/15 p-2.5 text-sm bg-[#0f0f0f] border-white/20 text-white rounded-lg outline-none focus:border-archora-gold" value={newCoupon.value} onChange={e=>setNewCoupon({...newCoupon, value: e.target.value as any})} />
            </div>
            <div className="w-full md:w-48">
              <label className="text-xs uppercase tracking-widest text-gray-400 block mb-1">Expiry Date (Optional)</label>
-             <input type="date" className="w-full border border-white/15 p-2.5 text-sm frosted-glass-white-input text-white rounded-lg outline-none focus:border-archora-gold" value={newCoupon.expiryDate} onChange={e=>setNewCoupon({...newCoupon, expiryDate: e.target.value})} />
+             <input type="date" className="w-full border border-white/15 p-2.5 text-sm bg-[#0f0f0f] border-white/20 text-white rounded-lg outline-none focus:border-archora-gold" value={newCoupon.expiryDate} onChange={e=>setNewCoupon({...newCoupon, expiryDate: e.target.value})} />
            </div>
            <button type="submit" className="bg-archora-gold hover:bg-[#E5C762] text-black px-6 py-2.5 h-[42px] text-xs font-bold uppercase tracking-widest transition-colors rounded-lg cursor-pointer">
              Save
@@ -1791,11 +1838,11 @@ const CouponsAdminTab = () => {
       )}
 
       {coupons.length === 0 ? (
-        <div className="p-8 text-center text-gray-400 frosted-glass-white-card rounded-2xl">No coupons active.</div>
+        <div className="p-8 text-center text-gray-400 bg-[#1a1a1a] border border-white/10 rounded-2xl">No coupons active.</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {coupons.map(coupon => (
-            <div key={coupon.id} className={`frosted-glass-white-card p-6 rounded-2xl border transition-all shadow-2xl ${coupon.isActive ? 'border-archora-gold/40' : 'border-white/10 opacity-60'}`}>
+            <div key={coupon.id} className={`bg-[#1a1a1a] border border-white/10 p-6 rounded-2xl border transition-all shadow-2xl ${coupon.isActive ? 'border-archora-gold/40' : 'border-white/10 opacity-60'}`}>
                <div className="flex justify-between items-start mb-4">
                  <h3 className="font-mono text-xl font-bold tracking-wider text-archora-gold">{coupon.code}</h3>
                  <div className="flex gap-2">

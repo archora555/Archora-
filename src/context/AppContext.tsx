@@ -134,7 +134,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     { title: 'Dining', filter: 'Dining' }
   ];
 
-  const defaultLogo = { type: 'image' as const, text: 'ARCHORA', imageUrl: '/1787550151155-removebg-preview.png' };
+  const defaultLogo = { type: 'image' as const, text: 'ARCHORA', imageUrl: '/logo.svg' };
   
   const defaultLayoutConfig: import('../types').LayoutConfig = {
     header: {
@@ -152,10 +152,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     logoSettings: {
       type: 'image',
       text: 'ARCHORA',
-      imageUrl: '/1787550151155-removebg-preview.png',
-      width: 170,
-      mobileHeight: 36,
-      desktopHeight: 44
+      imageUrl: '/logo.svg',
+      width: 250,
+      mobileHeight: 60,
+      desktopHeight: 80
     },
     categorySection: {
       title: '',
@@ -257,6 +257,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const saved = localStorage.getItem('archora_layoutConfig');
       if (saved) {
         const parsed = JSON.parse(saved);
+        if (parsed.logoSettings) {
+          if (parsed.logoSettings.mobileHeight === 36) parsed.logoSettings.mobileHeight = 60;
+          if (parsed.logoSettings.desktopHeight === 44) parsed.logoSettings.desktopHeight = 80;
+          if (parsed.logoSettings.width === 170) parsed.logoSettings.width = 250;
+        }
         return {
           ...defaultLayoutConfig,
           ...parsed,
@@ -265,7 +270,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           logoSettings: { 
             ...defaultLayoutConfig.logoSettings, 
             ...(parsed.logoSettings || {}),
-            imageUrl: (parsed.logoSettings && parsed.logoSettings.imageUrl) ? parsed.logoSettings.imageUrl : '/1787550151155-removebg-preview.png',
+            imageUrl: (parsed.logoSettings && parsed.logoSettings.imageUrl) ? parsed.logoSettings.imageUrl : '/logo.svg',
             type: (parsed.logoSettings && parsed.logoSettings.type) ? parsed.logoSettings.type : 'image'
           },
           categorySection: { ...defaultLayoutConfig.categorySection, ...(parsed.categorySection || {}) },

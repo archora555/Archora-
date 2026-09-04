@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAppContext } from '../context/AppContext';
 import { EditableWrapper } from './VisualEditor/EditableWrapper';
 import { useNavigate } from 'react-router-dom';
+import { ArchoraLogo } from './ArchoraLogo';
 
 export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -47,12 +48,19 @@ export const Navbar = () => {
 
   const logoConfig = layoutConfig.logoSettings;
 
-  const LogoWrapper = () => (
+  const renderLogo = () => (
     <EditableWrapper 
       id="logo" 
       type="logo"
-      currentWidth={layoutConfig.logoSettings.width}
-      onResize={(w) => setLayoutConfig({...layoutConfig, logoSettings: {...layoutConfig.logoSettings, width: w}})}
+      currentWidth={layoutConfig.logoSettings.desktopHeight || 80}
+      onResize={(h) => setLayoutConfig({
+        ...layoutConfig, 
+        logoSettings: {
+          ...layoutConfig.logoSettings, 
+          desktopHeight: h,
+          mobileHeight: Math.max(30, Math.floor(h * 0.75))
+        }
+      })}
       isTextEditable={logoConfig.type === 'text' || !logoConfig.imageUrl}
       onTextChange={(t) => setLayoutConfig({...layoutConfig, logoSettings: {...layoutConfig.logoSettings, text: t}})}
       currentAlign={layoutConfig.logoSettings.align || 'right'}
@@ -64,14 +72,21 @@ export const Navbar = () => {
     >
       {logoConfig.type === 'text' && logoConfig.text && logoConfig.text !== 'ARCHORA' ? (
         <span className="font-display text-3xl md:text-4xl tracking-[0.1em] text-[#D4AF37]" style={{ textShadow: "0px 1px 1px rgba(0,0,0,0.1)" }}>{logoConfig.text}</span>
-      ) : (
+      ) : logoConfig.imageUrl && logoConfig.imageUrl !== '/logo.svg' && logoConfig.imageUrl !== '/1788428927791.png' ? (
         <img 
-          src="/1787550151155-removebg-preview.png" 
+          src={logoConfig.imageUrl} 
           alt={logoConfig.text || 'ARCHORA'} 
-          className="object-contain transition-all duration-300 drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)] hover:opacity-95 cursor-pointer" 
+          className="object-contain transition-all duration-300 hover:opacity-95 cursor-pointer max-w-none" 
           style={{ 
-            width: layoutConfig.logoSettings.width ? `${layoutConfig.logoSettings.width}px` : 'auto', 
-            height: typeof window !== 'undefined' && window.innerWidth < 768 ? `${layoutConfig.logoSettings.mobileHeight || 36}px` : `${layoutConfig.logoSettings.desktopHeight || 44}px` 
+            height: typeof window !== 'undefined' && window.innerWidth < 768 ? `${layoutConfig.logoSettings.mobileHeight || 60}px` : `${layoutConfig.logoSettings.desktopHeight || 80}px` 
+          }}
+        />
+      ) : (
+        <ArchoraLogo 
+          alt={logoConfig.text || 'ARCHORA'} 
+          className="object-contain transition-all duration-300 hover:opacity-95 cursor-pointer max-w-none" 
+          style={{ 
+            height: typeof window !== 'undefined' && window.innerWidth < 768 ? `${layoutConfig.logoSettings.mobileHeight || 60}px` : `${layoutConfig.logoSettings.desktopHeight || 80}px` 
           }}
         />
       )}
@@ -115,7 +130,7 @@ export const Navbar = () => {
       </AnimatePresence>
 
       <header 
-        className={`w-full transition-all duration-300 ${isScrolled ? 'frosted-glass-white-header py-4' : 'bg-transparent py-6'}`}
+        className={`w-full transition-all duration-300 ${isScrolled ? 'frosted-glass-white-header py-2' : 'bg-transparent py-3'}`}
         style={isScrolled && layoutConfig.header?.bgColor && layoutConfig.header.bgColor !== '#ffffff' && layoutConfig.header.bgColor !== '#070D09' ? { backgroundColor: layoutConfig.header.bgColor } : {}}
       >
         
@@ -136,14 +151,11 @@ export const Navbar = () => {
                   className="absolute left-0 mt-4 w-56 frosted-glass-white-dropdown py-2 flex flex-col z-50 rounded-2xl text-white overflow-hidden shadow-2xl"
                 >
                   <div className="px-4 py-2 mb-1 border-b border-white/10 flex items-center">
-                    <img 
-                      src={logoConfig.imageUrl || '/1787550151155-removebg-preview.png'} 
-                      alt="ARCHORA" 
-                      className="h-6 w-auto object-contain opacity-90"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).src = '/logo.svg';
-                      }}
-                    />
+                    {logoConfig.imageUrl && logoConfig.imageUrl !== '/logo.svg' && logoConfig.imageUrl !== '/1788428927791.png' ? (
+                      <img src={logoConfig.imageUrl} alt="ARCHORA" className="h-10 w-auto object-contain opacity-90 max-w-full" />
+                    ) : (
+                      <ArchoraLogo height={24} className="h-10 w-auto object-contain opacity-90 max-w-full" />
+                    )}
                   </div>
                   {menuItems.map(item => (
                     <button 
@@ -211,7 +223,7 @@ export const Navbar = () => {
             onClick={() => { navigate('/'); setCurrentView('home'); }}
             style={{ transform: `translate(${layoutConfig.logoSettings.offsetX || 0}px, ${layoutConfig.logoSettings.offsetY || 0}px)` }}
           >
-            <LogoWrapper />
+            {renderLogo()}
           </div>
         </div>
         

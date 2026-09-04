@@ -43,6 +43,15 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({ product, onC
     shipping: false,
   });
 
+  const activeImages = (product.colorImages && product.colorImages[selectedColor]?.length > 0)
+    ? product.colorImages[selectedColor]
+    : (product.images || []);
+
+  useEffect(() => {
+    setCurrentImageIdx(0);
+    setShowARViewer(false);
+  }, [selectedColor]);
+
   const toggleSection = (key: string) => {
     setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
   };
@@ -78,11 +87,11 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({ product, onC
 
   const nextImg = () => {
     setShowARViewer(false);
-    setCurrentImageIdx((p) => (p + 1) % product.images.length);
+    setCurrentImageIdx((p) => (p + 1) % activeImages.length);
   };
   const prevImg = () => {
     setShowARViewer(false);
-    setCurrentImageIdx((p) => (p - 1 + product.images.length) % product.images.length);
+    setCurrentImageIdx((p) => (p - 1 + activeImages.length) % activeImages.length);
   };
 
   const handleAddToCart = () => {
@@ -168,7 +177,7 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({ product, onC
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.25 }}
-                    src={product.images[currentImageIdx] || undefined} 
+                    src={activeImages[currentImageIdx] || undefined} 
                     alt={product.name} 
                     className="w-full h-full object-cover"
                   />
@@ -176,7 +185,7 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({ product, onC
               </AnimatePresence>
               
               {/* Prev / Next Arrows for Main Photo */}
-              {!showARViewer && product.images.length > 1 && (
+              {!showARViewer && activeImages.length > 1 && (
                 <>
                   <button 
                     onClick={prevImg} 
@@ -242,9 +251,9 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({ product, onC
             </h2>
 
             {/* Clickable Thumbnails Row */}
-            {product.images && product.images.length > 1 && (
+            {activeImages && activeImages.length > 1 && (
               <div className="flex gap-2 sm:gap-3 mb-4 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {product.images.map((img, idx) => (
+                {activeImages.map((img, idx) => (
                   <button
                     key={idx}
                     type="button"

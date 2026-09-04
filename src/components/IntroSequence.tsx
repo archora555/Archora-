@@ -1,8 +1,12 @@
 import React, { useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ArchoraLogo } from './ArchoraLogo';
+import { useAppContext } from '../context/AppContext';
 
 export const IntroSequence = ({ onComplete }: { onComplete: () => void }) => {
+  const { layoutConfig } = useAppContext();
+  const logoConfig = layoutConfig.logoSettings;
+
   useEffect(() => {
     // Prevent scrolling behind intro
     document.body.style.overflow = 'hidden';
@@ -150,10 +154,20 @@ export const IntroSequence = ({ onComplete }: { onComplete: () => void }) => {
           <div className="w-[120%] h-[2px] bg-gradient-to-r from-transparent via-[#FFD700] to-transparent my-1 shadow-[0_0_12px_#FFD700] opacity-80" />
 
           <div className="mt-4 flex items-center justify-center">
-            <ArchoraLogo 
-              height={76} 
-              className="h-16 md:h-24 w-auto object-contain filter drop-shadow-[0_4px_25px_rgba(255,215,0,0.6)]" 
-            />
+            {logoConfig.type === 'text' && logoConfig.text && logoConfig.text !== 'ARCHORA' ? (
+              <span className="font-display text-5xl md:text-6xl tracking-[0.1em] text-[#D4AF37]" style={{ textShadow: "0px 4px 25px rgba(255,215,0,0.6)" }}>{logoConfig.text}</span>
+            ) : logoConfig.imageUrl && logoConfig.imageUrl !== '/logo.svg' && logoConfig.imageUrl !== '/1788428927791.png' ? (
+              <img 
+                src={logoConfig.imageUrl} 
+                alt={logoConfig.text || 'ARCHORA'} 
+                className="h-16 md:h-24 w-auto object-contain filter drop-shadow-[0_4px_25px_rgba(255,215,0,0.6)]" 
+              />
+            ) : (
+              <ArchoraLogo 
+                height={76} 
+                className="h-16 md:h-24 w-auto object-contain filter drop-shadow-[0_4px_25px_rgba(255,215,0,0.6)]" 
+              />
+            )}
           </div>
         </motion.div>
 

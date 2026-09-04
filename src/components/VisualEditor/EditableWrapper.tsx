@@ -141,10 +141,10 @@ export const EditableWrapper: React.FC<EditableWrapperProps> = ({
       <AnimatePresence>
         {isActive && (
           <motion.div 
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="fixed top-4 left-1/2 -translate-x-1/2 frosted-glass-white-card rounded-xl flex items-center p-1.5 z-[99999] border border-white/20 whitespace-nowrap shadow-2xl text-white"
+            exit={{ opacity: 0, y: 10 }}
+            className="fixed bottom-20 md:bottom-12 left-1/2 -translate-x-1/2 bg-zinc-900 rounded-xl flex items-center p-1.5 z-[99999] border border-zinc-700 whitespace-nowrap shadow-2xl text-white"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-1">
@@ -212,10 +212,8 @@ export const EditableWrapper: React.FC<EditableWrapperProps> = ({
 
             {/* Sliders Panel */}
             {showSliders && hasSliders && (
-              <motion.div 
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="absolute top-full left-0 mt-2 frosted-glass-white-card shadow-2xl rounded-xl border border-white/20 p-4 min-w-[220px] flex flex-col gap-4 text-white"
+              <div 
+                className="absolute bottom-full mb-2 left-0 bg-zinc-900 shadow-2xl rounded-xl border border-zinc-700 p-4 min-w-[220px] flex flex-col gap-4 text-white z-[99999]"
               >
                 {onResize && (
                   <div className="flex flex-col gap-1">
@@ -282,7 +280,7 @@ export const EditableWrapper: React.FC<EditableWrapperProps> = ({
                     />
                   </div>
                 )}
-              </motion.div>
+              </div>
             )}
           </motion.div>
         )}

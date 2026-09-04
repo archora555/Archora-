@@ -21,7 +21,7 @@ export const BuilderToolbar = () => {
   if (!node) return null;
 
   return (
-    <div className="fixed top-20 right-4 w-80 frosted-glass-white-card shadow-2xl rounded-2xl border border-white/20 z-[99999] overflow-hidden flex flex-col max-h-[80vh] text-white">
+    <div className="fixed top-20 right-4 left-4 md:left-auto md:w-80 bg-[#1a1a1a] shadow-2xl rounded-2xl border border-white/10 z-[99999] overflow-hidden flex flex-col max-h-[45vh] md:max-h-[80vh] text-white">
       <div className="flex items-center justify-between p-3 border-b border-white/10 bg-white/5">
         <span className="font-semibold text-sm text-archora-gold">Editing: {node.type}</span>
         <div className="flex items-center gap-1">
@@ -60,11 +60,11 @@ export const BuilderToolbar = () => {
             </div>
             <div>
               <label className="text-xs font-semibold text-gray-300">Background Color</label>
-              <input type="color" value={node.styles.backgroundColor || '#ffffff'} onChange={e => updateNode(node.id, { styles: { ...node.styles, backgroundColor: e.target.value }})} className="w-full h-8 cursor-pointer rounded frosted-glass-white-input border border-white/20" />
+              <input type="color" value={node.styles.backgroundColor || '#ffffff'} onChange={e => updateNode(node.id, { styles: { ...node.styles, backgroundColor: e.target.value }})} className="w-full h-8 cursor-pointer rounded bg-[#0f0f0f] border border-white/20" />
             </div>
             <div>
               <label className="text-xs font-semibold text-gray-300">Text Color</label>
-              <input type="color" value={node.styles.color || '#000000'} onChange={e => updateNode(node.id, { styles: { ...node.styles, color: e.target.value }})} className="w-full h-8 cursor-pointer rounded frosted-glass-white-input border border-white/20" />
+              <input type="color" value={node.styles.color || '#000000'} onChange={e => updateNode(node.id, { styles: { ...node.styles, color: e.target.value }})} className="w-full h-8 cursor-pointer rounded bg-[#0f0f0f] border border-white/20" />
             </div>
           </>
         )}
@@ -78,7 +78,7 @@ export const BuilderToolbar = () => {
                   type="text" 
                   value={node.props[key]} 
                   onChange={e => updateNode(node.id, { props: { ...node.props, [key]: e.target.value }})}
-                  className="w-full border border-white/20 frosted-glass-white-input text-white rounded px-2.5 py-1.5 mt-1 text-sm outline-none focus:border-archora-gold"
+                  className="w-full border border-white/20 bg-[#0f0f0f] text-white rounded px-2.5 py-1.5 mt-1 text-sm outline-none focus:border-archora-gold"
                 />
               </div>
             ))}
